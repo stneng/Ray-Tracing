@@ -13,7 +13,7 @@ clippy:
 test:
 	cargo test --all-features
 
-ci: fmt clippy test run_release
+ci: fmt clippy run_release
 
 clean:
 	cargo clean
