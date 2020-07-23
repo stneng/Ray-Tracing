@@ -1,4 +1,4 @@
-use std::ops::{Add, AddAssign, Div, Mul, MulAssign, Neg, Sub, SubAssign};
+use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
 pub struct Vec3 {
@@ -172,6 +172,16 @@ impl Div<f64> for Vec3 {
             y: self.y / other,
             z: self.z / other,
         }
+    }
+}
+
+impl DivAssign<f64> for Vec3 {
+    fn div_assign(&mut self, other: f64) {
+        *self = Self {
+            x: self.x / other,
+            y: self.y / other,
+            z: self.z / other,
+        };
     }
 }
 

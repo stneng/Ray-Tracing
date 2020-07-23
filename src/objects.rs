@@ -1,11 +1,15 @@
+use std::sync::Arc;
+
+pub use crate::materials::*;
 pub use crate::ray::Ray;
 pub use crate::vec3::Vec3;
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct HitRecord {
     pub t: f64,
     pub p: Vec3,
     pub normal: Vec3,
+    pub mat_ptr: Arc<dyn Material>,
 }
 pub trait Object {
     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
@@ -24,7 +28,7 @@ impl Object for ObjectList {
         let mut closest = t_max;
         for x in self.objects.iter() {
             if let Some(tmp) = x.hit(ray, t_min, closest) {
-                ans = Some(tmp);
+                ans = Some(tmp.clone());
                 closest = tmp.t;
             }
         }
@@ -32,10 +36,10 @@ impl Object for ObjectList {
     }
 }
 
-#[derive(Clone, Copy)]
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f64,
+    pub material: Arc<dyn Material>,
 }
 impl Object for Sphere {
     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
@@ -51,6 +55,7 @@ impl Object for Sphere {
                     t: ans,
                     p: ray.at(ans),
                     normal: (ray.at(ans) - self.center) / self.radius,
+                    mat_ptr: self.material.clone(),
                 });
             }
             ans = (-b + discriminant.sqrt()) / (2.0 * a);
@@ -59,6 +64,7 @@ impl Object for Sphere {
                     t: ans,
                     p: ray.at(ans),
                     normal: (ray.at(ans) - self.center) / self.radius,
+                    mat_ptr: self.material.clone(),
                 });
             }
         }
