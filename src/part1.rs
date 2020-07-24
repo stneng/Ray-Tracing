@@ -44,7 +44,7 @@ pub fn run_part1() {
     }));
     world.add(Box::new(Sphere {
         center: Vec3::new(-1.0, 0.0, -1.0),
-        radius: -0.4,
+        radius: -0.45,
         material: Arc::new(Dielectric { ref_idx: 1.5 }),
     }));
     world.add(Box::new(Sphere {
@@ -56,7 +56,15 @@ pub fn run_part1() {
         }),
     }));
 
-    let cam = Camera::new();
+    let cam = Camera::new(
+        Vec3::new(3.0, 3.0, 2.0),
+        Vec3::new(0.0, 0.0, -1.0),
+        Vec3::new(0.0, 1.0, 0.0),
+        20.0,
+        16.0 / 9.0,
+        2.0,
+        (Vec3::new(0.0, 0.0, -1.0) - Vec3::new(3.0, 3.0, 2.0)).length(),
+    );
 
     let image_width = 400;
     let image_height = 225;

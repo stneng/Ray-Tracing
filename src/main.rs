@@ -1,11 +1,10 @@
 mod camera;
-#[allow(dead_code)]
-mod image_test;
+//mod image_test;
 mod materials;
 mod objects;
 mod part1;
 mod ray;
-#[allow(clippy::float_cmp, dead_code)]
+#[allow(clippy::float_cmp)]
 mod vec3;
 fn main() {
     //image_test::run_test();

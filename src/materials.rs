@@ -1,36 +1,7 @@
 pub use crate::objects::*;
 pub use crate::ray::Ray;
-pub use crate::vec3::Vec3;
-use rand::Rng;
+pub use crate::vec3::*;
 
-fn random_in_unit_sphere() -> Vec3 {
-    loop {
-        let t = Vec3::new(
-            rand::random::<f64>(),
-            rand::random::<f64>(),
-            rand::random::<f64>(),
-        ) * 2.0
-            - Vec3::ones();
-        if t.squared_length() <= 1.0 {
-            return t;
-        }
-    }
-}
-fn random_unit_vector() -> Vec3 {
-    let a = rand::thread_rng().gen_range(0.0, 2.0 * std::f64::consts::PI);
-    let z = rand::thread_rng().gen_range(-1.0, 1.0);
-    let r = ((1.0 - z * z) as f64).sqrt();
-    Vec3::new(r * a.cos(), r * a.sin(), z)
-}
-fn reflect(v: Vec3, n: Vec3) -> Vec3 {
-    v - n * 2.0 * (v * n)
-}
-fn refract(v: Vec3, n: Vec3, etai_over_etat: f64) -> Vec3 {
-    let cos_theta = (-v * n).min(1.0);
-    let r_out_perp = (v + n * cos_theta) * etai_over_etat;
-    let r_out_parallel = -n * (1.0 - r_out_perp.squared_length()).abs().sqrt();
-    r_out_perp + r_out_parallel
-}
 fn schlick(cosine: f64, ref_idx: f64) -> f64 {
     let r0 = ((1.0 - ref_idx) / (1.0 + ref_idx)) * ((1.0 - ref_idx) / (1.0 + ref_idx));
     r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
