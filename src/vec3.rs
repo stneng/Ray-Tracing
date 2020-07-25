@@ -44,6 +44,13 @@ impl Vec3 {
             a.x * b.y - b.x * a.y,
         )
     }
+    pub fn random(min: f64, max: f64) -> Self {
+        Self::new(
+            rand::thread_rng().gen_range(min, max),
+            rand::thread_rng().gen_range(min, max),
+            rand::thread_rng().gen_range(min, max),
+        )
+    }
 }
 
 impl Add for Vec3 {

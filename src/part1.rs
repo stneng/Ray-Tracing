@@ -1,5 +1,6 @@
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
+use rand::Rng;
 use std::sync::Arc;
 
 pub use crate::camera::Camera;
@@ -19,56 +20,92 @@ fn ray_color(ray: Ray, world: &ObjectList, depth: i32) -> Vec3 {
     let t = (ray.dir.unit().y + 1.0) / 2.0;
     Vec3::new(1.0, 1.0, 1.0) * (1.0 - t) + Vec3::new(0.5, 0.7, 1.0) * t
 }
-pub fn run_part1() {
-    println!("part1");
-
+fn random_scene() -> ObjectList {
     let mut world = ObjectList { objects: vec![] };
+    // ground
     world.add(Box::new(Sphere {
-        center: Vec3::new(0.0, 0.0, -1.0),
-        radius: 0.5,
+        center: Vec3::new(0.0, -1000.0, 0.0),
+        radius: 1000.0,
         material: Arc::new(Lambertian {
-            albedo: Vec3::new(0.1, 0.2, 0.5),
+            albedo: Vec3::new(0.5, 0.5, 0.5),
+        }),
+    }));
+    for a in -11..11 {
+        for b in -11..11 {
+            let center = Vec3::new(
+                a as f64 + 0.9 * rand::random::<f64>(),
+                0.2,
+                b as f64 + 0.9 * rand::random::<f64>(),
+            );
+            if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
+                let rd = rand::random::<f64>();
+                if rd < 0.8 {
+                    world.add(Box::new(Sphere {
+                        center,
+                        radius: 0.2,
+                        material: Arc::new(Lambertian {
+                            albedo: Vec3::elemul(Vec3::random(0.0, 1.0), Vec3::random(0.0, 1.0)),
+                        }),
+                    }));
+                } else if rd < 0.95 {
+                    world.add(Box::new(Sphere {
+                        center,
+                        radius: 0.2,
+                        material: Arc::new(Metal {
+                            albedo: Vec3::random(0.0, 1.0),
+                            fuzz: rand::thread_rng().gen_range(0.0, 0.5),
+                        }),
+                    }));
+                } else {
+                    world.add(Box::new(Sphere {
+                        center,
+                        radius: 0.2,
+                        material: Arc::new(Dielectric { ref_idx: 1.5 }),
+                    }));
+                }
+            }
+        }
+    }
+    world.add(Box::new(Sphere {
+        center: Vec3::new(-4.0, 1.0, 0.0),
+        radius: 1.0,
+        material: Arc::new(Lambertian {
+            albedo: Vec3::new(0.4, 0.2, 0.1),
         }),
     }));
     world.add(Box::new(Sphere {
-        center: Vec3::new(0.0, -100.5, -1.0),
-        radius: 100.0,
-        material: Arc::new(Lambertian {
-            albedo: Vec3::new(0.8, 0.8, 0.0),
-        }),
-    }));
-    world.add(Box::new(Sphere {
-        center: Vec3::new(-1.0, 0.0, -1.0),
-        radius: 0.5,
-        material: Arc::new(Dielectric { ref_idx: 1.5 }),
-    }));
-    world.add(Box::new(Sphere {
-        center: Vec3::new(-1.0, 0.0, -1.0),
-        radius: -0.45,
-        material: Arc::new(Dielectric { ref_idx: 1.5 }),
-    }));
-    world.add(Box::new(Sphere {
-        center: Vec3::new(1.0, 0.0, -1.0),
-        radius: 0.5,
+        center: Vec3::new(4.0, 1.0, 0.0),
+        radius: 1.0,
         material: Arc::new(Metal {
-            albedo: Vec3::new(0.8, 0.6, 0.2),
+            albedo: Vec3::new(0.7, 0.6, 0.5),
             fuzz: 0.0,
         }),
     }));
+    world.add(Box::new(Sphere {
+        center: Vec3::new(0.0, 1.0, 0.0),
+        radius: 1.0,
+        material: Arc::new(Dielectric { ref_idx: 1.5 }),
+    }));
+    world
+}
+pub fn run_part1() {
+    println!("part1");
+
+    let world = random_scene();
 
     let cam = Camera::new(
-        Vec3::new(3.0, 3.0, 2.0),
-        Vec3::new(0.0, 0.0, -1.0),
+        Vec3::new(13.0, 2.0, 3.0),
+        Vec3::new(0.0, 0.0, 0.0),
         Vec3::new(0.0, 1.0, 0.0),
         20.0,
         16.0 / 9.0,
-        2.0,
-        (Vec3::new(0.0, 0.0, -1.0) - Vec3::new(3.0, 3.0, 2.0)).length(),
+        0.1,
+        10.0,
     );
 
-    let image_width = 400;
-    let image_height = 225;
-    let samples_per_pixel = 100;
+    let image_width = 1600;
+    let image_height = 900;
+    let samples_per_pixel = 256;
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
     let pbar = ProgressBar::new(image_width as u64);
     for x in 0..image_width {
