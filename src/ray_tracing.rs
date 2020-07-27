@@ -9,8 +9,16 @@ pub use crate::objects::*;
 pub use crate::ray::Ray;
 pub use crate::scenes::*;
 pub use crate::vec3::Vec3;
+use rand::rngs::SmallRng;
+use rand::SeedableRng;
 
-fn ray_color(ray: Ray, world: &ObjectList, background: Vec3, depth: i32) -> Vec3 {
+fn ray_color(
+    ray: Ray,
+    world: &ObjectList,
+    background: Vec3,
+    depth: i32,
+    rng: &mut SmallRng,
+) -> Vec3 {
     if depth <= 0 {
         return Vec3::zero();
     }
@@ -20,7 +28,7 @@ fn ray_color(ray: Ray, world: &ObjectList, background: Vec3, depth: i32) -> Vec3
             return emitted
                 + Vec3::elemul(
                     attenuation,
-                    ray_color(scattered, world, background, depth - 1),
+                    ray_color(scattered, world, background, depth - 1, rng),
                 );
         }
         return emitted;
@@ -58,6 +66,7 @@ pub fn run_ray_tracing() {
         let world = world.clone();
         let cam = cam.clone();
         thread::spawn(move || {
+            let mut small_rng = SmallRng::from_entropy();
             for x in start_x..end_x {
                 let mut ans = ThreadResult { x, color: vec![] };
                 for y in 0..image_height {
@@ -66,7 +75,7 @@ pub fn run_ray_tracing() {
                         let u = (x as f64 + rand::random::<f64>()) / (image_width as f64 - 1.0);
                         let v = (y as f64 + rand::random::<f64>()) / (image_height as f64 - 1.0);
                         let ray = cam.get_ray(u, v);
-                        color += ray_color(ray, &world, background, 50);
+                        color += ray_color(ray, &world, background, 50, &mut small_rng);
                     }
                     color /= samples_per_pixel as f64;
                     ans.color.push([

@@ -1,4 +1,5 @@
 use rand::Rng;
+use rand::{rngs::SmallRng, SeedableRng};
 use std::sync::Arc;
 
 pub use crate::bvh::*;
@@ -9,6 +10,7 @@ pub use crate::vec3::Vec3;
 
 pub fn random_scene() -> (ObjectList, Vec3, Camera) {
     let mut world = ObjectList { objects: vec![] };
+    let mut rng = SmallRng::from_entropy();
     world.add(Arc::new(Sphere {
         center: Vec3::new(0.0, -1000.0, 0.0),
         radius: 1000.0,
@@ -43,7 +45,7 @@ pub fn random_scene() -> (ObjectList, Vec3, Camera) {
                         radius: 0.2,
                         material: Arc::new(Lambertian {
                             albedo: Arc::new(SolidColor {
-                                color: Vec3::elemul(Vec3::random(0.0, 1.0), Vec3::random(0.0, 1.0)),
+                                color: Vec3::elemul(Vec3::random(0.0, 1.0, &mut rng), Vec3::random(0.0, 1.0, &mut rng)),
                             }),
                         }),
                     }));
@@ -52,7 +54,7 @@ pub fn random_scene() -> (ObjectList, Vec3, Camera) {
                         center,
                         radius: 0.2,
                         material: Arc::new(Metal {
-                            albedo: Vec3::random(0.0, 1.0),
+                            albedo: Vec3::random(0.0, 1.0, &mut rng),
                             fuzz: rand::thread_rng().gen_range(0.0, 0.5),
                         }),
                     }));
@@ -107,6 +109,7 @@ pub fn random_scene() -> (ObjectList, Vec3, Camera) {
     )
 }
 pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
+    let mut rng = SmallRng::from_entropy();
     let mut world = ObjectList { objects: vec![] };
     world.add(Arc::new(Sphere {
         center: Vec3::new(0.0, -1000.0, 0.0),
@@ -140,7 +143,7 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
                         radius,
                         material: Arc::new(Lambertian {
                             albedo: Arc::new(SolidColor {
-                                color: Vec3::random(0.1, 0.9),
+                                color: Vec3::random(0.1, 0.9, &mut rng),
                             }),
                         }),
                     }));
@@ -149,7 +152,7 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
                         center,
                         radius,
                         material: Arc::new(Metal {
-                            albedo: Vec3::random(0.0, 1.0),
+                            albedo: Vec3::random(0.0, 1.0, &mut rng),
                             fuzz: rand::thread_rng().gen_range(0.0, 0.5),
                         }),
                     }));
@@ -167,7 +170,7 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
                         radius,
                         material: Arc::new(DiffuseLight {
                             emit: Arc::new(SolidColor {
-                                color: Vec3::random(0.1, 0.9),
+                                color: Vec3::random(0.1, 0.9, &mut rng),
                             }),
                         }),
                     }));

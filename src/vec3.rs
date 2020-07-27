@@ -1,4 +1,5 @@
-use rand::Rng;
+use rand::{Rng, SeedableRng};
+use rand::rngs::SmallRng;
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -44,11 +45,11 @@ impl Vec3 {
             a.x * b.y - b.x * a.y,
         )
     }
-    pub fn random(min: f64, max: f64) -> Self {
+    pub fn random(min: f64, max: f64, rng: &mut SmallRng) -> Self {
         Self::new(
-            rand::thread_rng().gen_range(min, max),
-            rand::thread_rng().gen_range(min, max),
-            rand::thread_rng().gen_range(min, max),
+            rng.gen_range(min, max),
+            rng.gen_range(min, max),
+            rng.gen_range(min, max),
         )
     }
 }
