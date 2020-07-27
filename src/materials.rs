@@ -12,6 +12,9 @@ fn schlick(cosine: f64, ref_idx: f64) -> f64 {
 
 pub trait Material: Sync + Send {
     fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)>;
+    fn emitted(&self, _u: f64, _v: f64, _p: Vec3) -> Vec3 {
+        Vec3::zero()
+    }
 }
 
 pub struct Lambertian {
@@ -73,5 +76,17 @@ impl Material for Dielectric {
             Vec3::ones(),
             Ray::new(rec.p, reflect(r_in.dir.unit(), rec.normal), r_in.time),
         ))
+    }
+}
+
+pub struct DiffuseLight {
+    pub emit: Arc<dyn Texture>,
+}
+impl Material for DiffuseLight {
+    fn scatter(&self, _r_in: Ray, _rec: &HitRecord) -> Option<(Vec3, Ray)> {
+        None
+    }
+    fn emitted(&self, u: f64, v: f64, p: Vec3) -> Vec3 {
+        self.emit.value(u, v, p)
     }
 }

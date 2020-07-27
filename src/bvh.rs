@@ -111,7 +111,7 @@ impl Object for BvhNode {
             return None;
         }
         if let Some(tmp) = self.left.hit(ray, t_min, t_max) {
-            if let Some(tmp) = self.right.hit(ray, tmp.t, t_max) {
+            if let Some(tmp) = self.right.hit(ray, t_min, tmp.t) {
                 return Some(tmp);
             } else {
                 return Some(tmp);

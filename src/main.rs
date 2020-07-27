@@ -5,6 +5,8 @@ mod materials;
 mod objects;
 mod ray;
 mod ray_tracing;
+#[allow(dead_code)]
+mod scenes;
 mod texture;
 #[allow(clippy::float_cmp)]
 mod vec3;
