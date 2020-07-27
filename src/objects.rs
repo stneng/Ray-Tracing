@@ -6,11 +6,11 @@ pub use crate::ray::Ray;
 pub use crate::vec3::Vec3;
 
 #[derive(Clone)]
-pub struct HitRecord {
+pub struct HitRecord <'a> {
     pub t: f64,
     pub p: Vec3,
     pub normal: Vec3,
-    pub mat_ptr: Arc<dyn Material>,
+    pub mat_ptr: &'a dyn Material,
     pub u: f64,
     pub v: f64,
 }
@@ -80,7 +80,7 @@ impl Object for Sphere {
                     t: ans,
                     p: ray.at(ans),
                     normal: (ray.at(ans) - self.center) / self.radius,
-                    mat_ptr: self.material.clone(),
+                    mat_ptr: &*self.material,
                     u: texture_u,
                     v: texture_v,
                 });
@@ -91,7 +91,7 @@ impl Object for Sphere {
                     t: ans,
                     p: ray.at(ans),
                     normal: (ray.at(ans) - self.center) / self.radius,
-                    mat_ptr: self.material.clone(),
+                    mat_ptr: &*self.material,
                     u: texture_u,
                     v: texture_v,
                 });
@@ -136,7 +136,7 @@ impl Object for MovingSphere {
                     t: ans,
                     p: ray.at(ans),
                     normal: (ray.at(ans) - self.get_center(ray.time)) / self.radius,
-                    mat_ptr: self.material.clone(),
+                    mat_ptr: &*self.material,
                     u: texture_u,
                     v: texture_v,
                 });
@@ -147,7 +147,7 @@ impl Object for MovingSphere {
                     t: ans,
                     p: ray.at(ans),
                     normal: (ray.at(ans) - self.get_center(ray.time)) / self.radius,
-                    mat_ptr: self.material.clone(),
+                    mat_ptr: &*self.material,
                     u: texture_u,
                     v: texture_v,
                 });
