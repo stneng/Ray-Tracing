@@ -29,7 +29,7 @@ fn ray_color(ray: Ray, world: &ObjectList, background: Vec3, depth: i32) -> Vec3
 pub fn run_ray_tracing() {
     println!("ray tracing");
 
-    let (world, background, cam) = random_scene();
+    let (world, background, cam) = random_scene_light();
 
     let image_width = 1600;
     let image_height = 900;
