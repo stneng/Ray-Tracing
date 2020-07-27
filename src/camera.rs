@@ -3,6 +3,7 @@ use rand::Rng;
 pub use crate::ray::Ray;
 pub use crate::vec3::*;
 
+#[derive(Clone)]
 pub struct Camera {
     pub origin: Vec3,
     pub lower_left_corner: Vec3,

@@ -1,5 +1,7 @@
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
+use std::sync::mpsc;
+use std::thread;
 
 pub use crate::bvh::*;
 pub use crate::camera::Camera;
@@ -25,7 +27,10 @@ fn ray_color(ray: Ray, world: &ObjectList, background: Vec3, depth: i32) -> Vec3
     }
     background
 }
-
+pub struct ThreadResult {
+    pub x: u32,
+    pub color: Vec<[u8; 3]>,
+}
 pub fn run_ray_tracing() {
     println!("ray tracing");
 
@@ -36,22 +41,44 @@ pub fn run_ray_tracing() {
     let samples_per_pixel = 256;
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
     let pbar = ProgressBar::new(image_width as u64);
-    for x in 0..image_width {
+
+    let thread_num = 2;
+    let x_per_thread = image_width / thread_num;
+    let (tx, rx) = mpsc::channel();
+    for i in 0..thread_num {
+        let start_x = i * x_per_thread;
+        let end_x = std::cmp::min((i + 1) * x_per_thread, image_width);
+        let tx = tx.clone();
+        let world = world.clone();
+        let cam = cam.clone();
+        thread::spawn(move || {
+            for x in start_x..end_x {
+                let mut ans = ThreadResult { x, color: vec![] };
+                for y in 0..image_height {
+                    let mut color = Vec3::new(0.0, 0.0, 0.0);
+                    for _ in 0..samples_per_pixel {
+                        let u = (x as f64 + rand::random::<f64>()) / (image_width as f64 - 1.0);
+                        let v = (y as f64 + rand::random::<f64>()) / (image_height as f64 - 1.0);
+                        let ray = cam.get_ray(u, v);
+                        color += ray_color(ray, &world, background, 50);
+                    }
+                    color /= samples_per_pixel as f64;
+                    ans.color.push([
+                        (color.x.sqrt() * 255.99999) as u8,
+                        (color.y.sqrt() * 255.99999) as u8,
+                        (color.z.sqrt() * 255.99999) as u8,
+                    ])
+                }
+                tx.send(ans).unwrap();
+            }
+        });
+    }
+    std::mem::drop(tx);
+    for received in rx {
+        let x = received.x;
         for y in 0..image_height {
             let pixel = img.get_pixel_mut(x, image_height - 1 - y);
-            let mut color = Vec3::new(0.0, 0.0, 0.0);
-            for _ in 0..samples_per_pixel {
-                let u = (x as f64 + rand::random::<f64>()) / (image_width as f64 - 1.0);
-                let v = (y as f64 + rand::random::<f64>()) / (image_height as f64 - 1.0);
-                let ray = cam.get_ray(u, v);
-                color += ray_color(ray, &world, background, 50);
-            }
-            color /= samples_per_pixel as f64;
-            *pixel = image::Rgb([
-                (color.x.sqrt() * 255.99999) as u8,
-                (color.y.sqrt() * 255.99999) as u8,
-                (color.z.sqrt() * 255.99999) as u8,
-            ])
+            *pixel = image::Rgb(received.color[y as usize]);
         }
         pbar.inc(1);
     }

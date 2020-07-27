@@ -18,6 +18,7 @@ pub trait Object: Sync + Send {
     fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
     fn bounding_box(&self, t1: f64, t2: f64) -> Option<Aabb>;
 }
+#[derive(Clone)]
 pub struct ObjectList {
     pub objects: Vec<Arc<dyn Object>>,
 }
