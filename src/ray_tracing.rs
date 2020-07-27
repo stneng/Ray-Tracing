@@ -36,13 +36,19 @@ pub fn run_ray_tracing() {
 
     let (world, background, cam) = random_scene_light();
 
-    let image_width = 1600;
-    let image_height = 900;
-    let samples_per_pixel = 256;
+    let is_ci = match std::env::var("CI") {
+        Ok(x) => x == "true",
+        Err(_) => false,
+    };
+    let (image_width, image_height, samples_per_pixel, thread_num) = if is_ci {
+        (1600, 900, 256, 2)
+    } else {
+        (400, 225, 64, 16)
+    };
+
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
     let pbar = ProgressBar::new(image_width as u64);
 
-    let thread_num = 2;
     let x_per_thread = image_width / thread_num;
     let (tx, rx) = mpsc::channel();
     for i in 0..thread_num {
@@ -69,7 +75,7 @@ pub fn run_ray_tracing() {
                         (color.z.sqrt() * 255.99999) as u8,
                     ])
                 }
-                tx.send(ans).unwrap();
+                tx.send(ans).expect("failed to send result");
             }
         });
     }
