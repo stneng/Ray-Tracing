@@ -3,6 +3,7 @@ use indicatif::ProgressBar;
 use rand::Rng;
 use std::sync::Arc;
 
+pub use crate::bvh::*;
 pub use crate::camera::Camera;
 pub use crate::objects::*;
 pub use crate::ray::Ray;
@@ -23,13 +24,21 @@ fn ray_color(ray: Ray, world: &ObjectList, depth: i32) -> Vec3 {
 fn random_scene() -> ObjectList {
     let mut world = ObjectList { objects: vec![] };
     // ground
-    world.add(Box::new(Sphere {
+    world.add(Arc::new(Sphere {
         center: Vec3::new(0.0, -1000.0, 0.0),
         radius: 1000.0,
         material: Arc::new(Lambertian {
-            albedo: Vec3::new(0.5, 0.5, 0.5),
+            albedo: Arc::new(CheckerTexture {
+                odd: Arc::new(SolidColor {
+                    color: Vec3::new(0.2, 0.3, 0.1),
+                }),
+                even: Arc::new(SolidColor {
+                    color: Vec3::new(0.9, 0.9, 0.9),
+                }),
+            }),
         }),
     }));
+    let mut box1 = ObjectList { objects: vec![] };
     for a in -11..11 {
         for b in -11..11 {
             let center = Vec3::new(
@@ -40,15 +49,21 @@ fn random_scene() -> ObjectList {
             if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 let rd = rand::random::<f64>();
                 if rd < 0.8 {
-                    world.add(Box::new(Sphere {
-                        center,
+                    box1.add(Arc::new(MovingSphere {
+                        center1: center,
+                        center2: center
+                            + Vec3::new(0.0, rand::thread_rng().gen_range(0.0, 0.5), 0.0),
+                        t1: 0.0,
+                        t2: 1.0,
                         radius: 0.2,
                         material: Arc::new(Lambertian {
-                            albedo: Vec3::elemul(Vec3::random(0.0, 1.0), Vec3::random(0.0, 1.0)),
+                            albedo: Arc::new(SolidColor {
+                                color: Vec3::elemul(Vec3::random(0.0, 1.0), Vec3::random(0.0, 1.0)),
+                            }),
                         }),
                     }));
                 } else if rd < 0.95 {
-                    world.add(Box::new(Sphere {
+                    box1.add(Arc::new(Sphere {
                         center,
                         radius: 0.2,
                         material: Arc::new(Metal {
@@ -57,7 +72,7 @@ fn random_scene() -> ObjectList {
                         }),
                     }));
                 } else {
-                    world.add(Box::new(Sphere {
+                    box1.add(Arc::new(Sphere {
                         center,
                         radius: 0.2,
                         material: Arc::new(Dielectric { ref_idx: 1.5 }),
@@ -66,14 +81,18 @@ fn random_scene() -> ObjectList {
             }
         }
     }
-    world.add(Box::new(Sphere {
+    let len = box1.objects.len();
+    world.add(Arc::new(BvhNode::new(&mut box1.objects, 0, len, 0.0, 1.0)));
+    world.add(Arc::new(Sphere {
         center: Vec3::new(-4.0, 1.0, 0.0),
         radius: 1.0,
         material: Arc::new(Lambertian {
-            albedo: Vec3::new(0.4, 0.2, 0.1),
+            albedo: Arc::new(SolidColor {
+                color: Vec3::new(0.4, 0.2, 0.1),
+            }),
         }),
     }));
-    world.add(Box::new(Sphere {
+    world.add(Arc::new(Sphere {
         center: Vec3::new(4.0, 1.0, 0.0),
         radius: 1.0,
         material: Arc::new(Metal {
@@ -81,15 +100,15 @@ fn random_scene() -> ObjectList {
             fuzz: 0.0,
         }),
     }));
-    world.add(Box::new(Sphere {
+    world.add(Arc::new(Sphere {
         center: Vec3::new(0.0, 1.0, 0.0),
         radius: 1.0,
         material: Arc::new(Dielectric { ref_idx: 1.5 }),
     }));
     world
 }
-pub fn run_part1() {
-    println!("part1");
+pub fn run_ray_tracing() {
+    println!("ray tracing");
 
     let world = random_scene();
 
@@ -101,6 +120,8 @@ pub fn run_part1() {
         16.0 / 9.0,
         0.1,
         10.0,
+        0.0,
+        1.0,
     );
 
     let image_width = 1600;
@@ -128,6 +149,6 @@ pub fn run_part1() {
         pbar.inc(1);
     }
 
-    img.save("output/part1.png").unwrap();
+    img.save("output/ray_tracing.png").unwrap();
     pbar.finish();
 }

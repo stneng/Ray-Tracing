@@ -1,3 +1,5 @@
+use rand::Rng;
+
 pub use crate::ray::Ray;
 pub use crate::vec3::*;
 
@@ -10,8 +12,11 @@ pub struct Camera {
     pub v: Vec3,
     pub w: Vec3,
     pub lens_radius: f64,
+    pub t1: f64,
+    pub t2: f64,
 }
 impl Camera {
+    #[allow(clippy::too_many_arguments)]
     pub fn new(
         lookfrom: Vec3,
         lookat: Vec3,
@@ -20,6 +25,8 @@ impl Camera {
         aspect_ratio: f64,
         aperture: f64,
         focus_dist: f64,
+        t1: f64,
+        t2: f64,
     ) -> Self {
         let theta = vfov * std::f64::consts::PI / 180.0;
         let viewport_height = 2.0 * (theta / 2.0).tan();
@@ -42,6 +49,8 @@ impl Camera {
             v,
             w,
             lens_radius: aperture / 2.0,
+            t1,
+            t2,
         }
     }
     pub fn get_ray(&self, u: f64, v: f64) -> Ray {
@@ -50,6 +59,7 @@ impl Camera {
         Ray::new(
             self.origin + offset,
             self.lower_left_corner + self.horizontal * u + self.vertical * v - self.origin - offset,
+            rand::thread_rng().gen_range(self.t1, self.t2),
         )
     }
 }

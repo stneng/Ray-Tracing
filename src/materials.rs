@@ -1,5 +1,8 @@
+use std::sync::Arc;
+
 pub use crate::objects::*;
 pub use crate::ray::Ray;
+pub use crate::texture::*;
 pub use crate::vec3::*;
 
 fn schlick(cosine: f64, ref_idx: f64) -> f64 {
@@ -12,12 +15,15 @@ pub trait Material: Sync + Send {
 }
 
 pub struct Lambertian {
-    pub albedo: Vec3,
+    pub albedo: Arc<dyn Texture>,
 }
 impl Material for Lambertian {
-    fn scatter(&self, _r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let target = rec.p + rec.normal + random_unit_vector();
-        Some((self.albedo, Ray::new(rec.p, target - rec.p)))
+        Some((
+            self.albedo.value(rec.u, rec.v, rec.p),
+            Ray::new(rec.p, target - rec.p, r_in.time),
+        ))
     }
 }
 
@@ -28,7 +34,11 @@ pub struct Metal {
 impl Material for Metal {
     fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let reflected = reflect(r_in.dir.unit(), rec.normal);
-        let scattered = Ray::new(rec.p, reflected + random_in_unit_sphere() * self.fuzz);
+        let scattered = Ray::new(
+            rec.p,
+            reflected + random_in_unit_sphere() * self.fuzz,
+            r_in.time,
+        );
         if scattered.dir * rec.normal > 0.0 {
             Some((self.albedo, scattered))
         } else {
@@ -57,11 +67,11 @@ impl Material for Dielectric {
             && rand::random::<f64>() > schlick(cos_theta, self.ref_idx)
         {
             let refracted = refract(r_in.dir.unit(), real_normal, etai_over_etat);
-            return Some((Vec3::ones(), Ray::new(rec.p, refracted)));
+            return Some((Vec3::ones(), Ray::new(rec.p, refracted, r_in.time)));
         }
         Some((
             Vec3::ones(),
-            Ray::new(rec.p, reflect(r_in.dir.unit(), rec.normal)),
+            Ray::new(rec.p, reflect(r_in.dir.unit(), rec.normal), r_in.time),
         ))
     }
 }
