@@ -90,3 +90,19 @@ impl Material for DiffuseLight {
         self.emit.value(u, v, p)
     }
 }
+
+pub struct DiffuseLambertianLight {
+    pub emit: Arc<dyn Texture>,
+}
+impl Material for DiffuseLambertianLight {
+    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+        let target = rec.p + rec.normal + random_unit_vector();
+        Some((
+            self.emit.value(rec.u, rec.v, rec.p) / 2.0,
+            Ray::new(rec.p, target - rec.p, r_in.time),
+        ))
+    }
+    fn emitted(&self, u: f64, v: f64, p: Vec3) -> Vec3 {
+        self.emit.value(u, v, p) / 2.0
+    }
+}

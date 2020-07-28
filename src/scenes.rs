@@ -165,7 +165,7 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
                     box1.add(Arc::new(Sphere {
                         center,
                         radius,
-                        material: Arc::new(DiffuseLight {
+                        material: Arc::new(DiffuseLambertianLight {
                             emit: Arc::new(SolidColor {
                                 color: Vec3::random(0.1, 0.9),
                             }),
@@ -180,7 +180,7 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
     world.add(Arc::new(Sphere {
         center: Vec3::new(0.0, 0.8, 0.0),
         radius: 0.8,
-        material: Arc::new(DiffuseLight {
+        material: Arc::new(DiffuseLambertianLight {
             emit: Arc::new(CheckerTexture {
                 odd: Arc::new(SolidColor {
                     color: Vec3::new(1.0, 0.6, 0.4),
