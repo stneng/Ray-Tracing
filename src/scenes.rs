@@ -164,11 +164,25 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
                 } else {
                     box1.add(Arc::new(Sphere {
                         center,
-                        radius,
+                        radius: radius * 0.5,
                         material: Arc::new(DiffuseLight {
                             emit: Arc::new(SolidColor {
                                 color: Vec3::random(0.1, 0.9),
                             }),
+                        }),
+                    }));
+                    box1.add(Arc::new(Sphere {
+                        center,
+                        radius,
+                        material: Arc::new(Dielectric {
+                            ref_idx: 1.5
+                        }),
+                    }));
+                    box1.add(Arc::new(Sphere {
+                        center,
+                        radius: radius * -0.9,
+                        material: Arc::new(Dielectric {
+                            ref_idx: 1.5
                         }),
                     }));
                 }
