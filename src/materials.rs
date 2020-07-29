@@ -79,6 +79,43 @@ impl Material for Dielectric {
     }
 }
 
+pub struct FrostedDielectric {
+    pub ref_idx: f64,
+    pub fuzz: f64,
+}
+impl Material for FrostedDielectric {
+    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+        let etai_over_etat;
+        let real_normal;
+        if r_in.dir * rec.normal > 0.0 {
+            etai_over_etat = self.ref_idx;
+            real_normal = -rec.normal;
+        } else {
+            etai_over_etat = 1.0 / self.ref_idx;
+            real_normal = rec.normal;
+        }
+        let cos_theta = (-r_in.dir.unit() * real_normal).min(1.0);
+        let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
+        if etai_over_etat * sin_theta <= 1.0
+            && rand::random::<f64>() > schlick(cos_theta, self.ref_idx)
+        {
+            let refracted = refract(r_in.dir.unit(), real_normal, etai_over_etat);
+            return Some((
+                Vec3::ones(),
+                Ray::new(
+                    rec.p,
+                    refracted + random_in_unit_sphere() * self.fuzz,
+                    r_in.time,
+                ),
+            ));
+        }
+        Some((
+            Vec3::ones(),
+            Ray::new(rec.p, reflect(r_in.dir.unit(), rec.normal), r_in.time),
+        ))
+    }
+}
+
 pub struct DiffuseLight {
     pub emit: Arc<dyn Texture>,
 }

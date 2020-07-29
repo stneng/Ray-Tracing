@@ -161,14 +161,37 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
                             ref_idx: rand::thread_rng().gen_range(1.5, 2.0),
                         }),
                     }));
-                } else {
+                } else if rd < 0.8 {
                     box1.add(Arc::new(Sphere {
                         center,
-                        radius,
+                        radius: radius * 0.9,
                         material: Arc::new(DiffuseLight {
                             emit: Arc::new(SolidColor {
                                 color: Vec3::random(0.1, 0.9),
                             }),
+                        }),
+                    }));
+                    box1.add(Arc::new(Sphere {
+                        center,
+                        radius,
+                        material: Arc::new(Dielectric { ref_idx: 1.5 }),
+                    }));
+                } else {
+                    box1.add(Arc::new(Sphere {
+                        center,
+                        radius: radius * 0.5,
+                        material: Arc::new(DiffuseLight {
+                            emit: Arc::new(SolidColor {
+                                color: Vec3::random(0.1, 0.9),
+                            }),
+                        }),
+                    }));
+                    box1.add(Arc::new(Sphere {
+                        center,
+                        radius,
+                        material: Arc::new(FrostedDielectric {
+                            ref_idx: 1.5,
+                            fuzz: rand::thread_rng().gen_range(0.3, 0.5),
                         }),
                     }));
                 }
