@@ -34,7 +34,7 @@ pub struct ThreadResult {
 pub fn run_ray_tracing() {
     println!("ray tracing");
 
-    let (world, background, cam) = random_scene_light();
+    let (world, background, cam) = text_scene_light();
 
     let is_ci = match std::env::var("CI") {
         Ok(x) => x == "true",
@@ -43,7 +43,7 @@ pub fn run_ray_tracing() {
     let (image_width, image_height, samples_per_pixel, thread_num) = if is_ci {
         (3840, 2160, 256, 96)
     } else {
-        (400, 225, 64, 16)
+        (400, 225, 16, 4)
     };
 
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
