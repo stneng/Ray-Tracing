@@ -123,16 +123,39 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
         }),
     }));
     let mut box1 = ObjectList { objects: vec![] };
+    let mut box1_sphere = vec![
+        (Vec3::new(0.0, 0.8, 0.0), 0.8),
+        (Vec3::new(1.3, 0.5, 0.0), 0.5),
+        (Vec3::new(-1.3, 0.5, 0.0), 0.5),
+    ];
     for a in -11..11 {
         for b in -11..11 {
-            let radius = rand::thread_rng().gen_range(0.08, 0.25);
-            let center = Vec3::new(
+            let mut radius = rand::thread_rng().gen_range(0.08, 0.25);
+            let mut center = Vec3::new(
                 (a as f64 + 0.9 * rand::random::<f64>()) / 2.0,
                 radius,
                 (b as f64 + 0.9 * rand::random::<f64>()) / 2.0,
             );
-
-            if (center - Vec3::new(-0.2, radius, -0.2)).length() > 1.3 + radius {
+            loop {
+                let mut done = true;
+                for (c, r) in box1_sphere.iter() {
+                    if (*c - center).length() < (r + radius) {
+                        done = false;
+                        break;
+                    }
+                }
+                if done {
+                    break;
+                }
+                radius = rand::thread_rng().gen_range(0.08, 0.25);
+                center = Vec3::new(
+                    (a as f64 + 0.9 * rand::random::<f64>()) / 2.0,
+                    radius,
+                    (b as f64 + 0.9 * rand::random::<f64>()) / 2.0,
+                );
+            }
+            box1_sphere.push((center, radius));
+            if (center - Vec3::new(0.0, radius, 0.0)).length() > 1.3 {
                 let rd = rand::random::<f64>();
                 if rd < 0.2 {
                     box1.add(Arc::new(Sphere {
@@ -236,7 +259,7 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
             Vec3::new(0.0, 1.0, 0.0),
             40.0,
             16.0 / 9.0,
-            0.1,
+            0.05,
             9.0,
             0.0,
             1.0,
