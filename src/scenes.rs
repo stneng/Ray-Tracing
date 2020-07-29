@@ -111,8 +111,13 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
     world.add(Arc::new(Sphere {
         center: Vec3::new(0.0, -1000.0, 0.0),
         radius: 1000.0,
-        material: Arc::new(Lambertian {
-            albedo: Arc::new(CheckerTexture {
+        material: Arc::new(Dielectric { ref_idx: 1.5 }),
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3::new(0.0, -1000.0, 0.0),
+        radius: 999.0,
+        material: Arc::new(DiffuseLight {
+            emit: Arc::new(CheckerTexture {
                 odd: Arc::new(SolidColor {
                     color: Vec3::new(0.2, 0.3, 0.1),
                 }),
@@ -156,7 +161,10 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
     world.add(Arc::new(Sphere {
         center: Vec3::new(0.0, 0.8, 0.0),
         radius: 1.0,
-        material: Arc::new(FrostedDielectric { ref_idx: 1.5, fuzz: 0.6 }),
+        material: Arc::new(FrostedDielectric {
+            ref_idx: 1.5,
+            fuzz: 0.6,
+        }),
     }));
     world.add(Arc::new(Sphere {
         center: Vec3::new(0.0, 0.8, 0.0),
@@ -189,10 +197,10 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
         world,
         Vec3::zero(),
         Camera::new(
-            Vec3::new(6.0, 3.0, 6.0),
+            Vec3::new(6.0, 1.0, 6.0),
             Vec3::new(0.0, 0.0, 0.0),
             Vec3::new(0.0, 1.0, 0.0),
-            20.0,
+            30.0,
             16.0 / 9.0,
             0.1,
             9.0,
