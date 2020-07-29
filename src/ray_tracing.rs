@@ -1,7 +1,7 @@
 use image::{ImageBuffer, RgbImage};
 use indicatif::ProgressBar;
 use std::sync::mpsc;
-use std::thread;
+use threadpool::ThreadPool;
 
 pub use crate::bvh::*;
 pub use crate::camera::Camera;
@@ -49,15 +49,16 @@ pub fn run_ray_tracing() {
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
     let pbar = ProgressBar::new(image_width as u64);
 
-    let x_per_thread = image_width / thread_num;
+    let n_jobs = thread_num * 16;
     let (tx, rx) = mpsc::channel();
-    for i in 0..thread_num {
-        let start_x = i * x_per_thread;
-        let end_x = std::cmp::min((i + 1) * x_per_thread, image_width);
+    let pool = ThreadPool::new(thread_num as usize);
+    for i in 0..n_jobs {
+        let start_x = image_width * i / n_jobs;
+        let end_x = image_width * (i + 1) / n_jobs;
         let tx = tx.clone();
         let world = world.clone();
         let cam = cam.clone();
-        thread::spawn(move || {
+        pool.execute(move || {
             for x in start_x..end_x {
                 let mut ans = ThreadResult { x, color: vec![] };
                 for y in 0..image_height {
