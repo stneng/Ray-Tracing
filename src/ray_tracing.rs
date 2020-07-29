@@ -43,7 +43,7 @@ pub fn run_ray_tracing() {
     let (image_width, image_height, samples_per_pixel, thread_num) = if is_ci {
         (1600, 900, 256, 2)
     } else {
-        (400, 225, 64, 16)
+        (400, 225, 64, 4)
     };
 
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);

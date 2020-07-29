@@ -133,61 +133,31 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
             );
 
             if (center - Vec3::new(-0.2, radius, -0.2)).length() > 1.3 + radius {
-                let rd = rand::random::<f64>();
-                if rd < 0.2 {
-                    box1.add(Arc::new(Sphere {
-                        center,
-                        radius,
-                        material: Arc::new(Lambertian {
-                            albedo: Arc::new(SolidColor {
-                                color: Vec3::random(0.1, 0.9),
-                            }),
+                box1.add(Arc::new(Sphere {
+                    center,
+                    radius: radius * 0.5,
+                    material: Arc::new(DiffuseLight {
+                        emit: Arc::new(SolidColor {
+                            color: Vec3::random(0.1, 0.9),
                         }),
-                    }));
-                } else if rd < 0.4 {
-                    box1.add(Arc::new(Sphere {
-                        center,
-                        radius,
-                        material: Arc::new(Metal {
-                            albedo: Vec3::random(0.0, 1.0),
-                            fuzz: rand::thread_rng().gen_range(0.0, 0.5),
-                        }),
-                    }));
-                } else if rd < 0.6 {
-                    box1.add(Arc::new(Sphere {
-                        center,
-                        radius,
-                        material: Arc::new(Dielectric {
-                            ref_idx: rand::thread_rng().gen_range(1.5, 2.0),
-                        }),
-                    }));
-                } else {
-                    box1.add(Arc::new(Sphere {
-                        center,
-                        radius: radius * 0.5,
-                        material: Arc::new(DiffuseLight {
-                            emit: Arc::new(SolidColor {
-                                color: Vec3::random(0.1, 0.9),
-                            }),
-                        }),
-                    }));
-                    let fuzz = rand::thread_rng().gen_range(0.0, 0.5);
-                    box1.add(Arc::new(Sphere {
-                        center,
-                        radius,
-                        material: Arc::new(FrostedDielectric { ref_idx: 1.5, fuzz }),
-                    }));
-                    box1.add(Arc::new(Sphere {
-                        center,
-                        radius: radius * -0.9,
-                        material: Arc::new(FrostedDielectric { ref_idx: 1.5, fuzz }),
-                    }));
-                }
+                    }),
+                }));
+                let fuzz = rand::thread_rng().gen_range(0.3, 0.7);
+                box1.add(Arc::new(Sphere {
+                    center,
+                    radius,
+                    material: Arc::new(FrostedDielectric { ref_idx: 1.5, fuzz }),
+                }));
             }
         }
     }
     let len = box1.objects.len();
     world.add(Arc::new(BvhNode::new(&mut box1.objects, 0, len, 0.0, 1.0)));
+    world.add(Arc::new(Sphere {
+        center: Vec3::new(0.0, 0.8, 0.0),
+        radius: 1.0,
+        material: Arc::new(FrostedDielectric { ref_idx: 1.5, fuzz: 0.6 }),
+    }));
     world.add(Arc::new(Sphere {
         center: Vec3::new(0.0, 0.8, 0.0),
         radius: 0.8,
@@ -222,7 +192,7 @@ pub fn random_scene_light() -> (ObjectList, Vec3, Camera) {
             Vec3::new(6.0, 3.0, 6.0),
             Vec3::new(0.0, 0.0, 0.0),
             Vec3::new(0.0, 1.0, 0.0),
-            40.0,
+            20.0,
             16.0 / 9.0,
             0.1,
             9.0,
