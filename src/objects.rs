@@ -177,3 +177,190 @@ fn get_sphere_uv(p: Vec3) -> (f64, f64) {
         (theta + std::f64::consts::PI / 2.0) / std::f64::consts::PI,
     )
 }
+
+pub struct RectXY {
+    pub x1: f64,
+    pub x2: f64,
+    pub y1: f64,
+    pub y2: f64,
+    pub k: f64,
+    pub face: f64,
+    pub material: Arc<dyn Material>,
+}
+impl Object for RectXY {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let t = (self.k - ray.ori.z) / ray.dir.z;
+        if t >= t_min && t <= t_max {
+            let x = ray.ori.x + t * ray.dir.x;
+            let y = ray.ori.y + t * ray.dir.y;
+            if x >= self.x1 && x <= self.x2 && y >= self.y1 && y <= self.y2 {
+                return Some(HitRecord {
+                    t,
+                    p: ray.at(t),
+                    normal: Vec3::new(0.0, 0.0, 1.0) * self.face,
+                    mat_ptr: self.material.clone(),
+                    u: (x - self.x1) / (self.x2 - self.x1),
+                    v: (y - self.y1) / (self.y2 - self.y1),
+                });
+            }
+        }
+        None
+    }
+    fn bounding_box(&self, _t1: f64, _t2: f64) -> Option<Aabb> {
+        Some(Aabb {
+            min: Vec3::new(self.x1, self.y1, self.k - 0.0001),
+            max: Vec3::new(self.x2, self.y2, self.k + 0.0001),
+        })
+    }
+}
+pub struct RectXZ {
+    pub x1: f64,
+    pub x2: f64,
+    pub z1: f64,
+    pub z2: f64,
+    pub k: f64,
+    pub face: f64,
+    pub material: Arc<dyn Material>,
+}
+impl Object for RectXZ {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let t = (self.k - ray.ori.y) / ray.dir.y;
+        if t >= t_min && t <= t_max {
+            let x = ray.ori.x + t * ray.dir.x;
+            let z = ray.ori.z + t * ray.dir.z;
+            if x >= self.x1 && x <= self.x2 && z >= self.z1 && z <= self.z2 {
+                return Some(HitRecord {
+                    t,
+                    p: ray.at(t),
+                    normal: Vec3::new(0.0, 1.0, 0.0) * self.face,
+                    mat_ptr: self.material.clone(),
+                    u: (x - self.x1) / (self.x2 - self.x1),
+                    v: (z - self.z1) / (self.z2 - self.z1),
+                });
+            }
+        }
+        None
+    }
+    fn bounding_box(&self, _t1: f64, _t2: f64) -> Option<Aabb> {
+        Some(Aabb {
+            min: Vec3::new(self.x1, self.k - 0.0001, self.z1),
+            max: Vec3::new(self.x2, self.k + 0.0001, self.z2),
+        })
+    }
+}
+pub struct RectYZ {
+    pub y1: f64,
+    pub y2: f64,
+    pub z1: f64,
+    pub z2: f64,
+    pub k: f64,
+    pub face: f64,
+    pub material: Arc<dyn Material>,
+}
+impl Object for RectYZ {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        let t = (self.k - ray.ori.x) / ray.dir.x;
+        if t >= t_min && t <= t_max {
+            let y = ray.ori.y + t * ray.dir.y;
+            let z = ray.ori.z + t * ray.dir.z;
+            if y >= self.y1 && y <= self.y2 && z >= self.z1 && z <= self.z2 {
+                return Some(HitRecord {
+                    t,
+                    p: ray.at(t),
+                    normal: Vec3::new(1.0, 0.0, 0.0) * self.face,
+                    mat_ptr: self.material.clone(),
+                    u: (y - self.y1) / (self.y2 - self.y1),
+                    v: (z - self.z1) / (self.z2 - self.z1),
+                });
+            }
+        }
+        None
+    }
+    fn bounding_box(&self, _t1: f64, _t2: f64) -> Option<Aabb> {
+        Some(Aabb {
+            min: Vec3::new(self.k - 0.0001, self.y1, self.z1),
+            max: Vec3::new(self.k + 0.0001, self.y2, self.z2),
+        })
+    }
+}
+
+pub struct Box {
+    pub box_min: Vec3,
+    pub box_max: Vec3,
+    pub sides: ObjectList,
+}
+impl Box {
+    pub fn new(box_min: Vec3, box_max: Vec3, material: Arc<dyn Material>) -> Self {
+        let mut sides = ObjectList { objects: vec![] };
+        sides.add(Arc::new(RectXY {
+            x1: box_min.x,
+            x2: box_max.x,
+            y1: box_min.y,
+            y2: box_max.y,
+            k: box_min.z,
+            face: -1.0,
+            material: material.clone(),
+        }));
+        sides.add(Arc::new(RectXY {
+            x1: box_min.x,
+            x2: box_max.x,
+            y1: box_min.y,
+            y2: box_max.y,
+            k: box_max.z,
+            face: 1.0,
+            material: material.clone(),
+        }));
+        sides.add(Arc::new(RectXZ {
+            x1: box_min.x,
+            x2: box_max.x,
+            z1: box_min.z,
+            z2: box_max.z,
+            k: box_min.y,
+            face: -1.0,
+            material: material.clone(),
+        }));
+        sides.add(Arc::new(RectXZ {
+            x1: box_min.x,
+            x2: box_max.x,
+            z1: box_min.z,
+            z2: box_max.z,
+            k: box_max.y,
+            face: 1.0,
+            material: material.clone(),
+        }));
+        sides.add(Arc::new(RectYZ {
+            y1: box_min.y,
+            y2: box_max.y,
+            z1: box_min.z,
+            z2: box_max.z,
+            k: box_min.x,
+            face: -1.0,
+            material: material.clone(),
+        }));
+        sides.add(Arc::new(RectYZ {
+            y1: box_min.y,
+            y2: box_max.y,
+            z1: box_min.z,
+            z2: box_max.z,
+            k: box_max.x,
+            face: 1.0,
+            material: material.clone(),
+        }));
+        Self {
+            box_min,
+            box_max,
+            sides,
+        }
+    }
+}
+impl Object for Box {
+    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        self.sides.hit(ray, t_min, t_max)
+    }
+    fn bounding_box(&self, _t1: f64, _t2: f64) -> Option<Aabb> {
+        Some(Aabb {
+            min: self.box_min,
+            max: self.box_max,
+        })
+    }
+}

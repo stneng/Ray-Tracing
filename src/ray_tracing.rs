@@ -34,17 +34,17 @@ pub struct ThreadResult {
 pub fn run_ray_tracing() {
     println!("ray tracing");
 
-    let (world, background, cam) = random_scene_light();
-
     let is_ci = match std::env::var("CI") {
         Ok(x) => x == "true",
         Err(_) => false,
     };
     let (image_width, image_height, samples_per_pixel, thread_num) = if is_ci {
-        (3840, 2160, 256, 96)
+        (1600, 1600, 512, 2)
     } else {
-        (400, 225, 64, 16)
+        (600, 600, 64, 16)
     };
+
+    let (world, background, cam) = cornell_box(image_width as f64 / image_height as f64);
 
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
     let pbar = ProgressBar::new(image_width as u64);
@@ -71,9 +71,9 @@ pub fn run_ray_tracing() {
                     }
                     color /= samples_per_pixel as f64;
                     ans.color.push([
-                        (color.x.sqrt() * 255.99999) as u8,
-                        (color.y.sqrt() * 255.99999) as u8,
-                        (color.z.sqrt() * 255.99999) as u8,
+                        (num::clamp(color.x.sqrt(), 0.0, 0.99999) * 256.0) as u8,
+                        (num::clamp(color.y.sqrt(), 0.0, 0.99999) * 256.0) as u8,
+                        (num::clamp(color.z.sqrt(), 0.0, 0.99999) * 256.0) as u8,
                     ])
                 }
                 tx.send(ans).expect("failed to send result");
