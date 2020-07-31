@@ -15,7 +15,7 @@ fn ray_color(ray: &Ray, world: &ObjectList, background: Vec3, depth: i32) -> Vec
         return Vec3::zero();
     }
     if let Some(rec) = world.hit(ray, 0.001, 233333333333.0) {
-        let emitted = rec.mat_ptr.emitted(rec.u, rec.v, rec.p);
+        let emitted = rec.mat_ptr.emitted(ray, &rec, rec.u, rec.v, rec.p);
         if let Some((attenuation, scattered)) = rec.mat_ptr.scatter(ray, &rec) {
             return emitted
                 + Vec3::elemul(
@@ -39,7 +39,7 @@ pub fn run_ray_tracing() {
         Err(_) => false,
     };
     let (image_width, image_height, samples_per_pixel, thread_num) = if is_ci {
-        (1600, 1600, 512, 2)
+        (1600, 1600, 256, 2)
     } else {
         (600, 600, 64, 16)
     };
