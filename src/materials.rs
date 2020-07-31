@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 pub use crate::objects::*;
 pub use crate::ray::Ray;
 pub use crate::texture::*;
@@ -11,17 +9,18 @@ fn schlick(cosine: f64, ref_idx: f64) -> f64 {
 }
 
 pub trait Material: Sync + Send {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)>;
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)>;
     fn emitted(&self, _u: f64, _v: f64, _p: Vec3) -> Vec3 {
         Vec3::zero()
     }
 }
 
-pub struct Lambertian {
-    pub albedo: Arc<dyn Texture>,
+#[derive(Clone)]
+pub struct Lambertian<T: Texture> {
+    pub albedo: T,
 }
-impl Material for Lambertian {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+impl<T: Texture> Material for Lambertian<T> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let target = rec.p + rec.normal + random_unit_vector();
         Some((
             self.albedo.value(rec.u, rec.v, rec.p),
@@ -30,12 +29,13 @@ impl Material for Lambertian {
     }
 }
 
+#[derive(Clone)]
 pub struct Metal {
     pub albedo: Vec3,
     pub fuzz: f64,
 }
 impl Material for Metal {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let reflected = reflect(r_in.dir.unit(), rec.normal);
         let scattered = Ray::new(
             rec.p,
@@ -50,11 +50,12 @@ impl Material for Metal {
     }
 }
 
+#[derive(Clone)]
 pub struct Dielectric {
     pub ref_idx: f64,
 }
 impl Material for Dielectric {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let etai_over_etat;
         let real_normal;
         if r_in.dir * rec.normal > 0.0 {
@@ -79,12 +80,13 @@ impl Material for Dielectric {
     }
 }
 
+#[derive(Clone)]
 pub struct FrostedDielectric {
     pub ref_idx: f64,
     pub fuzz: f64,
 }
 impl Material for FrostedDielectric {
-    fn scatter(&self, r_in: Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord) -> Option<(Vec3, Ray)> {
         let etai_over_etat;
         let real_normal;
         if r_in.dir * rec.normal > 0.0 {
@@ -116,11 +118,12 @@ impl Material for FrostedDielectric {
     }
 }
 
-pub struct DiffuseLight {
-    pub emit: Arc<dyn Texture>,
+#[derive(Clone)]
+pub struct DiffuseLight<T: Texture> {
+    pub emit: T,
 }
-impl Material for DiffuseLight {
-    fn scatter(&self, _r_in: Ray, _rec: &HitRecord) -> Option<(Vec3, Ray)> {
+impl<T: Texture> Material for DiffuseLight<T> {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord) -> Option<(Vec3, Ray)> {
         None
     }
     fn emitted(&self, u: f64, v: f64, p: Vec3) -> Vec3 {

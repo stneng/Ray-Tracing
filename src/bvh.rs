@@ -6,7 +6,7 @@ pub use crate::objects::*;
 pub use crate::ray::Ray;
 pub use crate::vec3::Vec3;
 
-#[derive(Clone, Copy)]
+#[derive(Clone)]
 pub struct Aabb {
     pub min: Vec3,
     pub max: Vec3,
@@ -26,7 +26,7 @@ impl Aabb {
             ),
         }
     }
-    pub fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> bool {
+    pub fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> bool {
         {
             let mut t1 = (self.min.x - ray.ori.x) / ray.dir.x;
             let mut t2 = (self.max.x - ray.ori.x) / ray.dir.x;
@@ -106,7 +106,7 @@ impl BvhNode {
     }
 }
 impl Object for BvhNode {
-    fn hit(&self, ray: Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         if !self.boxx.hit(ray, t_min, t_max) {
             return None;
         }
@@ -123,7 +123,7 @@ impl Object for BvhNode {
         None
     }
     fn bounding_box(&self, _t1: f64, _t2: f64) -> Option<Aabb> {
-        Some(self.boxx)
+        Some(self.boxx.clone())
     }
 }
 

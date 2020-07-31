@@ -1,6 +1,5 @@
 use image::RgbImage;
 use rand::seq::SliceRandom;
-use std::sync::Arc;
 
 pub use crate::objects::*;
 pub use crate::ray::Ray;
@@ -10,6 +9,7 @@ pub trait Texture: Sync + Send {
     fn value(&self, u: f64, v: f64, p: Vec3) -> Vec3;
 }
 
+#[derive(Clone)]
 pub struct SolidColor {
     pub color: Vec3,
 }
@@ -19,11 +19,12 @@ impl Texture for SolidColor {
     }
 }
 
-pub struct CheckerTextureUV {
-    pub odd: Arc<dyn Texture>,
-    pub even: Arc<dyn Texture>,
+#[derive(Clone)]
+pub struct CheckerTextureUV<T1: Texture, T2: Texture> {
+    pub odd: T1,
+    pub even: T2,
 }
-impl Texture for CheckerTextureUV {
+impl<T1: Texture, T2: Texture> Texture for CheckerTextureUV<T1, T2> {
     fn value(&self, u: f64, v: f64, p: Vec3) -> Vec3 {
         if (u / 0.01) as i32 % 2 == (v / 0.01) as i32 % 2 {
             self.odd.value(u, v, p)
@@ -33,11 +34,12 @@ impl Texture for CheckerTextureUV {
     }
 }
 
-pub struct CheckerTexture {
-    pub odd: Arc<dyn Texture>,
-    pub even: Arc<dyn Texture>,
+#[derive(Clone)]
+pub struct CheckerTexture<T1: Texture, T2: Texture> {
+    pub odd: T1,
+    pub even: T2,
 }
-impl Texture for CheckerTexture {
+impl<T1: Texture, T2: Texture> Texture for CheckerTexture<T1, T2> {
     fn value(&self, u: f64, v: f64, p: Vec3) -> Vec3 {
         let sines = (10.0 * p.x).sin() * (10.0 * p.y).sin() * (10.0 * p.z).sin();
         if sines < 0.0 {
@@ -48,6 +50,7 @@ impl Texture for CheckerTexture {
     }
 }
 
+#[derive(Clone)]
 pub struct NoiseTexture {
     pub noise: Perlin,
     pub scale: f64,
@@ -58,6 +61,7 @@ impl Texture for NoiseTexture {
     }
 }
 
+#[derive(Clone)]
 pub struct ImageTexture {
     pub img: RgbImage,
 }
@@ -94,6 +98,7 @@ impl Texture for ImageTexture {
     }
 }
 
+#[derive(Clone)]
 pub struct Perlin {
     pub perm_x: Vec<i32>,
     pub perm_y: Vec<i32>,
