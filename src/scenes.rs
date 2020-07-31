@@ -266,7 +266,13 @@ pub fn text_scene_light() -> (ObjectList, Vec3, Camera) {
 
     use image::{ImageBuffer, RgbaImage};
     let mut image: RgbaImage = ImageBuffer::new(200, 30);
-    render_text(&mut image, "RAYTRACING", "EncodeSansExpanded-Medium.ttf", 24.0, image::Rgba([76, 167, 235, 255]));
+    render_text(
+        &mut image,
+        "RAYTRACING",
+        "EncodeSansExpanded-Medium.ttf",
+        24.0,
+        image::Rgba([76, 167, 235, 255]),
+    );
     let scale = 20.0;
 
     for i in 0..image.width() {
@@ -299,14 +305,20 @@ pub fn text_scene_light() -> (ObjectList, Vec3, Camera) {
     }
 
     let mut image: RgbaImage = ImageBuffer::new(50, 50);
-    render_text(&mut image, "♥", "Arimo-Bold.ttf", 50.0, image::Rgba([239, 130, 127, 255]));
+    render_text(
+        &mut image,
+        "♥",
+        "Arimo-Bold.ttf",
+        50.0,
+        image::Rgba([239, 130, 127, 255]),
+    );
     let scale = 10.0;
 
     for i in 0..image.width() {
         for j in 0..image.height() {
             let pixel = image.get_pixel(i, j);
             if pixel[3] > 0 {
-                let center = Vec3::new((i as f64 - 10.0) / scale, (30.0 - j as f64) / scale, 0.0)
+                let center = Vec3::new((i as f64 - 10.0) / scale, (40.0 - j as f64) / scale, 0.0)
                     + random_in_unit_sphere() / scale / 2.0;
                 let radius = 0.45 / scale;
                 box1.add(Arc::new(Sphere {
@@ -375,12 +387,12 @@ pub fn text_scene_light() -> (ObjectList, Vec3, Camera) {
         material: Arc::new(Dielectric { ref_idx: 1.5 }),
     }));
     world.add(Arc::new(Sphere {
-        center: Vec3::new(0.0, 1.1, -3.0),
+        center: Vec3::new(-5.0, 1.1, 0.0),
         radius: 1.1,
         material: Arc::new(Dielectric { ref_idx: 1.5 }),
     }));
     world.add(Arc::new(Sphere {
-        center: Vec3::new(0.0, 1.1, -3.0),
+        center: Vec3::new(-5.0, 1.1, 0.0),
         radius: 1.0,
         material: Arc::new(DiffuseLight {
             emit: Arc::new(SolidColor {
@@ -400,11 +412,11 @@ pub fn text_scene_light() -> (ObjectList, Vec3, Camera) {
         world,
         Vec3::zero(),
         Camera::new(
-            Vec3::new(2.0, 2.0, 8.0),
-            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(2.0, 2.0, 10.0),
+            Vec3::new(0.0, 1.0, 0.0),
             Vec3::new(0.0, 1.0, 0.0),
             20.0,
-            400.0 / 80.0,
+            400.0 / 100.0,
             0.1,
             9.0,
             0.0,
@@ -417,7 +429,13 @@ fn is_ci() -> bool {
     option_env!("CI").unwrap_or_default() == "true"
 }
 
-fn render_text(image: &mut image::RgbaImage, msg: &str, font: &str, size: f32, color: image::Rgba<u8>) {
+fn render_text(
+    image: &mut image::RgbaImage,
+    msg: &str,
+    font: &str,
+    size: f32,
+    color: image::Rgba<u8>,
+) {
     use image::Rgba;
     use rusttype::Font;
 
