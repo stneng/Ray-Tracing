@@ -262,27 +262,51 @@ pub fn text_scene_light() -> (ObjectList, Vec3, Camera) {
             fuzz: 0.1,
         }),
     }));
-    world.add(Arc::new(Sphere {
-        center: Vec3::new(0.0, -4.0, 0.0),
-        radius: 3.0,
-        material: Arc::new(DiffuseLight {
-            emit: Arc::new(SolidColor {
-                color: Vec3::ones(),
-            }),
-        }),
-    }));
     let mut box1 = ObjectList { objects: vec![] };
 
     use image::{ImageBuffer, RgbaImage};
     let mut image: RgbaImage = ImageBuffer::new(200, 30);
-    render_text(&mut image, "RAYTRACING");
+    render_text(&mut image, "RAYTRACING", "EncodeSansExpanded-Medium.ttf", 24.0, image::Rgba([76, 167, 235, 255]));
     let scale = 20.0;
 
     for i in 0..image.width() {
         for j in 0..image.height() {
             let pixel = image.get_pixel(i, j);
             if pixel[3] > 0 {
-                let center = Vec3::new((i as f64 - 80.0) / scale, (30.0 - j as f64) / scale, 2.0)
+                let center = Vec3::new((i as f64 - 65.0) / scale, (25.0 - j as f64) / scale, 2.0)
+                    + random_in_unit_sphere() / scale / 2.0;
+                let radius = 0.45 / scale;
+                box1.add(Arc::new(Sphere {
+                    center,
+                    radius,
+                    material: Arc::new(Dielectric { ref_idx: 1.5 }),
+                }));
+                box1.add(Arc::new(Sphere {
+                    center,
+                    radius: radius * 0.9,
+                    material: Arc::new(DiffuseLight {
+                        emit: Arc::new(SolidColor {
+                            color: Vec3::new(
+                                pixel[0] as f64 / 256.0,
+                                pixel[1] as f64 / 256.0,
+                                pixel[2] as f64 / 256.0,
+                            ),
+                        }),
+                    }),
+                }));
+            }
+        }
+    }
+
+    let mut image: RgbaImage = ImageBuffer::new(50, 50);
+    render_text(&mut image, "♥", "Arimo-Bold.ttf", 50.0, image::Rgba([239, 130, 127, 255]));
+    let scale = 10.0;
+
+    for i in 0..image.width() {
+        for j in 0..image.height() {
+            let pixel = image.get_pixel(i, j);
+            if pixel[3] > 0 {
+                let center = Vec3::new((i as f64 - 10.0) / scale, (30.0 - j as f64) / scale, 0.0)
                     + random_in_unit_sphere() / scale / 2.0;
                 let radius = 0.45 / scale;
                 box1.add(Arc::new(Sphere {
@@ -310,26 +334,62 @@ pub fn text_scene_light() -> (ObjectList, Vec3, Camera) {
     let len = box1.objects.len();
     world.add(Arc::new(BvhNode::new(&mut box1.objects, 0, len, 0.0, 1.0)));
     world.add(Arc::new(Sphere {
-        center: Vec3::new(0.0, 0.8, 0.0),
-        radius: 0.8,
+        center: Vec3::new(1.0, -4.0, -1.0),
+        radius: 2.0,
         material: Arc::new(DiffuseLight {
-            emit: Arc::new(CheckerTexture {
-                odd: Arc::new(SolidColor {
-                    color: Vec3::new(1.0, 0.6, 0.4),
-                }),
-                even: Arc::new(SolidColor {
-                    color: Vec3::new(1.0, 0.75, 0.3),
-                }),
+            emit: Arc::new(SolidColor {
+                color: Vec3::new(1.0, 0.6, 0.4),
             }),
         }),
     }));
     world.add(Arc::new(Sphere {
-        center: Vec3::new(1.3, 0.5, 0.0),
+        center: Vec3::new(-1.0, -4.0, 1.0),
+        radius: 2.0,
+        material: Arc::new(DiffuseLight {
+            emit: Arc::new(SolidColor {
+                color: Vec3::new(1.0, 0.6, 0.4),
+            }),
+        }),
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3::new(1.0, -4.0, 1.0),
+        radius: 2.0,
+        material: Arc::new(DiffuseLight {
+            emit: Arc::new(SolidColor {
+                color: Vec3::new(1.0, 0.75, 0.3),
+            }),
+        }),
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3::new(-1.0, -4.0, -1.0),
+        radius: 2.0,
+        material: Arc::new(DiffuseLight {
+            emit: Arc::new(SolidColor {
+                color: Vec3::new(1.0, 0.75, 0.3),
+            }),
+        }),
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3::new(2.3, 0.5, 0.0),
         radius: 0.5,
         material: Arc::new(Dielectric { ref_idx: 1.5 }),
     }));
     world.add(Arc::new(Sphere {
-        center: Vec3::new(-1.3, 0.5, 0.0),
+        center: Vec3::new(0.0, 1.1, -3.0),
+        radius: 1.1,
+        material: Arc::new(Dielectric { ref_idx: 1.5 }),
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3::new(0.0, 1.1, -3.0),
+        radius: 1.0,
+        material: Arc::new(DiffuseLight {
+            emit: Arc::new(SolidColor {
+                color: Vec3::ones(),
+            }),
+        }),
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3::new(-2.3, 0.5, 0.0),
         radius: 0.5,
         material: Arc::new(Metal {
             albedo: Vec3::new(0.8, 0.6, 0.3),
@@ -340,7 +400,7 @@ pub fn text_scene_light() -> (ObjectList, Vec3, Camera) {
         world,
         Vec3::zero(),
         Camera::new(
-            Vec3::new(6.0, 3.0, 6.0),
+            Vec3::new(2.0, 3.0, 6.0),
             Vec3::new(0.0, 0.0, 0.0),
             Vec3::new(0.0, 1.0, 0.0),
             40.0,
@@ -357,14 +417,14 @@ fn is_ci() -> bool {
     option_env!("CI").unwrap_or_default() == "true"
 }
 
-fn render_text(image: &mut image::RgbaImage, msg: &str) {
+fn render_text(image: &mut image::RgbaImage, msg: &str, font: &str, size: f32, color: image::Rgba<u8>) {
     use image::Rgba;
     use rusttype::Font;
 
     let font_file = if is_ci() {
-        "EncodeSans-Regular.ttf"
+        font.to_owned()
     } else {
-        "/System/Library/Fonts/Helvetica.ttc"
+        format!("output/{}", font)
     };
     let font_path = std::env::current_dir().unwrap().join(font_file);
     let data = std::fs::read(&font_path).unwrap();
@@ -377,10 +437,10 @@ fn render_text(image: &mut image::RgbaImage, msg: &str) {
 
     imageproc::drawing::draw_text_mut(
         image,
-        Rgba([76, 167, 235, 255]),
-        10,
-        10,
-        rusttype::Scale::uniform(24.0),
+        color,
+        0,
+        0,
+        rusttype::Scale::uniform(size),
         &font,
         msg,
     );
