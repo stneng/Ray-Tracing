@@ -10,5 +10,5 @@ edition = "2018"
 image = "0.23"
 indicatif = "0.15"
 num = "0.3"
-rand = "0.7"
+rand = { version = "0.7", features = ["small_rng"] }
 threadpool = "1.8"

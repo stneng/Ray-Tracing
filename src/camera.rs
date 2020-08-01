@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::{rngs::SmallRng, Rng};
 
 pub use crate::ray::Ray;
 pub use crate::vec3::*;
@@ -54,13 +54,13 @@ impl Camera {
             t2,
         }
     }
-    pub fn get_ray(&self, u: f64, v: f64) -> Ray {
-        let rd = random_in_unit_disk() * self.lens_radius;
+    pub fn get_ray(&self, u: f64, v: f64, rng: &mut SmallRng) -> Ray {
+        let rd = random_in_unit_disk(rng) * self.lens_radius;
         let offset = self.u * rd.x + self.v * rd.y;
         Ray::new(
             self.origin + offset,
             self.lower_left_corner + self.horizontal * u + self.vertical * v - self.origin - offset,
-            rand::thread_rng().gen_range(self.t1, self.t2),
+            rng.gen_range(self.t1, self.t2),
         )
     }
 }

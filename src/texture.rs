@@ -1,5 +1,6 @@
 use image::RgbImage;
 use rand::seq::SliceRandom;
+use rand::{rngs::SmallRng, SeedableRng};
 
 pub use crate::objects::*;
 pub use crate::ray::Ray;
@@ -114,18 +115,20 @@ impl Perlin {
             ranvec: Self::perlin_generate_vec(),
         }
     }
-    pub fn perlin_generate_perm() -> Vec<i32> {
+    fn perlin_generate_perm() -> Vec<i32> {
+        let mut rng = SmallRng::from_entropy();
         let mut ans = vec![];
         for i in 0..256 {
             ans.push(i);
         }
-        ans.shuffle(&mut rand::thread_rng());
+        ans.shuffle(&mut rng);
         ans
     }
-    pub fn perlin_generate_vec() -> Vec<Vec3> {
+    fn perlin_generate_vec() -> Vec<Vec3> {
+        let mut rng = SmallRng::from_entropy();
         let mut ans = vec![];
         for _ in 0..256 {
-            ans.push(Vec3::random(-1.0, 1.0).unit());
+            ans.push(Vec3::random(-1.0, 1.0, &mut rng).unit());
         }
         ans
     }

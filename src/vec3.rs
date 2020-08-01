@@ -1,4 +1,4 @@
-use rand::Rng;
+use rand::{rngs::SmallRng, Rng};
 use std::ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub, SubAssign};
 
 #[derive(Clone, Copy, Debug, PartialEq)]
@@ -44,11 +44,11 @@ impl Vec3 {
             a.x * b.y - b.x * a.y,
         )
     }
-    pub fn random(min: f64, max: f64) -> Self {
+    pub fn random(min: f64, max: f64, rng: &mut SmallRng) -> Self {
         Self::new(
-            rand::thread_rng().gen_range(min, max),
-            rand::thread_rng().gen_range(min, max),
-            rand::thread_rng().gen_range(min, max),
+            rng.gen_range(min, max),
+            rng.gen_range(min, max),
+            rng.gen_range(min, max),
         )
     }
 }
@@ -205,29 +205,24 @@ impl Neg for Vec3 {
     }
 }
 
-pub fn random_in_unit_sphere() -> Vec3 {
+pub fn random_in_unit_sphere(rng: &mut SmallRng) -> Vec3 {
     loop {
-        let t = Vec3::new(
-            rand::random::<f64>(),
-            rand::random::<f64>(),
-            rand::random::<f64>(),
-        ) * 2.0
-            - Vec3::ones();
+        let t =
+            Vec3::new(rng.gen::<f64>(), rng.gen::<f64>(), rng.gen::<f64>()) * 2.0 - Vec3::ones();
         if t.squared_length() <= 1.0 {
             return t;
         }
     }
 }
-pub fn random_unit_vector() -> Vec3 {
-    let a = rand::thread_rng().gen_range(0.0, 2.0 * std::f64::consts::PI);
-    let z = rand::thread_rng().gen_range(-1.0, 1.0);
+pub fn random_unit_vector(rng: &mut SmallRng) -> Vec3 {
+    let a = rng.gen_range(0.0, 2.0 * std::f64::consts::PI);
+    let z = rng.gen_range(-1.0, 1.0);
     let r = ((1.0 - z * z) as f64).sqrt();
     Vec3::new(r * a.cos(), r * a.sin(), z)
 }
-pub fn random_in_unit_disk() -> Vec3 {
+pub fn random_in_unit_disk(rng: &mut SmallRng) -> Vec3 {
     loop {
-        let t = Vec3::new(rand::random::<f64>(), rand::random::<f64>(), 0.0) * 2.0
-            - Vec3::new(1.0, 1.0, 0.0);
+        let t = Vec3::new(rng.gen::<f64>(), rng.gen::<f64>(), 0.0) * 2.0 - Vec3::new(1.0, 1.0, 0.0);
         if t.squared_length() <= 1.0 {
             return t;
         }
