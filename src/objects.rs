@@ -7,16 +7,16 @@ pub use crate::vec3::Vec3;
 
 #[derive(Clone)]
 pub struct HitRecord<'a> {
-    pub t: f64,
+    pub t: f32,
     pub p: Vec3,
     pub normal: Vec3,
     pub mat_ptr: &'a dyn Material,
-    pub u: f64,
-    pub v: f64,
+    pub u: f32,
+    pub v: f32,
 }
 pub trait Object: Sync + Send {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
-    fn bounding_box(&self, t1: f64, t2: f64) -> Option<Aabb>;
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord>;
+    fn bounding_box(&self, t1: f32, t2: f32) -> Option<Aabb>;
 }
 pub struct ObjectList {
     pub objects: Vec<Arc<dyn Object>>,
@@ -27,7 +27,7 @@ impl ObjectList {
     }
 }
 impl Object for ObjectList {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let mut ans: Option<HitRecord> = None;
         let mut closest = t_max;
         for x in self.objects.iter() {
@@ -38,7 +38,7 @@ impl Object for ObjectList {
         }
         ans
     }
-    fn bounding_box(&self, t1: f64, t2: f64) -> Option<Aabb> {
+    fn bounding_box(&self, t1: f32, t2: f32) -> Option<Aabb> {
         if self.objects.is_empty() {
             return None;
         }
@@ -61,11 +61,11 @@ impl Object for ObjectList {
 
 pub struct Sphere<T: Material> {
     pub center: Vec3,
-    pub radius: f64,
+    pub radius: f32,
     pub material: T,
 }
 impl<T: Material> Object for Sphere<T> {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = ray.ori - self.center;
         let a = ray.dir * ray.dir;
         let half_b = oc * ray.dir;
@@ -98,7 +98,7 @@ impl<T: Material> Object for Sphere<T> {
         }
         None
     }
-    fn bounding_box(&self, _t1: f64, _t2: f64) -> Option<Aabb> {
+    fn bounding_box(&self, _t1: f32, _t2: f32) -> Option<Aabb> {
         Some(Aabb {
             min: self.center - Vec3::new(self.radius, self.radius, self.radius),
             max: self.center + Vec3::new(self.radius, self.radius, self.radius),
@@ -109,18 +109,18 @@ impl<T: Material> Object for Sphere<T> {
 pub struct MovingSphere<T: Material> {
     pub center1: Vec3,
     pub center2: Vec3,
-    pub t1: f64,
-    pub t2: f64,
-    pub radius: f64,
+    pub t1: f32,
+    pub t2: f32,
+    pub radius: f32,
     pub material: T,
 }
 impl<T: Material> MovingSphere<T> {
-    pub fn get_center(&self, t: f64) -> Vec3 {
+    pub fn get_center(&self, t: f32) -> Vec3 {
         self.center1 + (self.center2 - self.center1) * ((t - self.t1) / (self.t2 - self.t1))
     }
 }
 impl<T: Material> Object for MovingSphere<T> {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let oc = ray.ori - self.get_center(ray.time);
         let a = ray.dir * ray.dir;
         let half_b = oc * ray.dir;
@@ -154,7 +154,7 @@ impl<T: Material> Object for MovingSphere<T> {
         }
         None
     }
-    fn bounding_box(&self, t1: f64, t2: f64) -> Option<Aabb> {
+    fn bounding_box(&self, t1: f32, t2: f32) -> Option<Aabb> {
         Some(Aabb::surrounding_box(
             Aabb {
                 min: self.get_center(t1) - Vec3::new(self.radius, self.radius, self.radius),
@@ -168,26 +168,26 @@ impl<T: Material> Object for MovingSphere<T> {
     }
 }
 
-fn get_sphere_uv(p: Vec3) -> (f64, f64) {
+fn get_sphere_uv(p: Vec3) -> (f32, f32) {
     let phi = p.z.atan2(p.x);
     let theta = p.y.asin();
     (
-        1.0 - (phi + std::f64::consts::PI) / (2.0 * std::f64::consts::PI),
-        (theta + std::f64::consts::PI / 2.0) / std::f64::consts::PI,
+        1.0 - (phi + std::f32::consts::PI) / (2.0 * std::f32::consts::PI),
+        (theta + std::f32::consts::PI / 2.0) / std::f32::consts::PI,
     )
 }
 
 pub struct RectXY<T: Material> {
-    pub x1: f64,
-    pub x2: f64,
-    pub y1: f64,
-    pub y2: f64,
-    pub k: f64,
-    pub face: f64,
+    pub x1: f32,
+    pub x2: f32,
+    pub y1: f32,
+    pub y2: f32,
+    pub k: f32,
+    pub face: f32,
     pub material: T,
 }
 impl<T: Material> Object for RectXY<T> {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let t = (self.k - ray.ori.z) / ray.dir.z;
         if t >= t_min && t <= t_max {
             let x = ray.ori.x + t * ray.dir.x;
@@ -205,7 +205,7 @@ impl<T: Material> Object for RectXY<T> {
         }
         None
     }
-    fn bounding_box(&self, _t1: f64, _t2: f64) -> Option<Aabb> {
+    fn bounding_box(&self, _t1: f32, _t2: f32) -> Option<Aabb> {
         Some(Aabb {
             min: Vec3::new(self.x1, self.y1, self.k - 0.0001),
             max: Vec3::new(self.x2, self.y2, self.k + 0.0001),
@@ -213,16 +213,16 @@ impl<T: Material> Object for RectXY<T> {
     }
 }
 pub struct RectXZ<T: Material> {
-    pub x1: f64,
-    pub x2: f64,
-    pub z1: f64,
-    pub z2: f64,
-    pub k: f64,
-    pub face: f64,
+    pub x1: f32,
+    pub x2: f32,
+    pub z1: f32,
+    pub z2: f32,
+    pub k: f32,
+    pub face: f32,
     pub material: T,
 }
 impl<T: Material> Object for RectXZ<T> {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let t = (self.k - ray.ori.y) / ray.dir.y;
         if t >= t_min && t <= t_max {
             let x = ray.ori.x + t * ray.dir.x;
@@ -240,7 +240,7 @@ impl<T: Material> Object for RectXZ<T> {
         }
         None
     }
-    fn bounding_box(&self, _t1: f64, _t2: f64) -> Option<Aabb> {
+    fn bounding_box(&self, _t1: f32, _t2: f32) -> Option<Aabb> {
         Some(Aabb {
             min: Vec3::new(self.x1, self.k - 0.0001, self.z1),
             max: Vec3::new(self.x2, self.k + 0.0001, self.z2),
@@ -248,16 +248,16 @@ impl<T: Material> Object for RectXZ<T> {
     }
 }
 pub struct RectYZ<T: Material> {
-    pub y1: f64,
-    pub y2: f64,
-    pub z1: f64,
-    pub z2: f64,
-    pub k: f64,
-    pub face: f64,
+    pub y1: f32,
+    pub y2: f32,
+    pub z1: f32,
+    pub z2: f32,
+    pub k: f32,
+    pub face: f32,
     pub material: T,
 }
 impl<T: Material> Object for RectYZ<T> {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let t = (self.k - ray.ori.x) / ray.dir.x;
         if t >= t_min && t <= t_max {
             let y = ray.ori.y + t * ray.dir.y;
@@ -275,7 +275,7 @@ impl<T: Material> Object for RectYZ<T> {
         }
         None
     }
-    fn bounding_box(&self, _t1: f64, _t2: f64) -> Option<Aabb> {
+    fn bounding_box(&self, _t1: f32, _t2: f32) -> Option<Aabb> {
         Some(Aabb {
             min: Vec3::new(self.k - 0.0001, self.y1, self.z1),
             max: Vec3::new(self.k + 0.0001, self.y2, self.z2),
@@ -361,7 +361,7 @@ impl<T: Material + Clone> Cuboid<T> {
     }
 }
 impl<T: Material + Clone> Object for Cuboid<T> {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         let mut ans: Option<HitRecord> = None;
         let mut closest = t_max;
         if let Some(tmp) = self.sides.0.hit(ray, t_min, closest) {
@@ -389,7 +389,7 @@ impl<T: Material + Clone> Object for Cuboid<T> {
         }
         ans
     }
-    fn bounding_box(&self, _t1: f64, _t2: f64) -> Option<Aabb> {
+    fn bounding_box(&self, _t1: f32, _t2: f32) -> Option<Aabb> {
         Some(Aabb {
             min: self.box_min,
             max: self.box_max,

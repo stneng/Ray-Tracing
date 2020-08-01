@@ -12,9 +12,9 @@ pub struct Camera {
     pub u: Vec3,
     pub v: Vec3,
     pub w: Vec3,
-    pub lens_radius: f64,
-    pub t1: f64,
-    pub t2: f64,
+    pub lens_radius: f32,
+    pub t1: f32,
+    pub t2: f32,
 }
 impl Camera {
     #[allow(clippy::too_many_arguments)]
@@ -22,14 +22,14 @@ impl Camera {
         lookfrom: Vec3,
         lookat: Vec3,
         vup: Vec3,
-        vfov: f64,
-        aspect_ratio: f64,
-        aperture: f64,
-        focus_dist: f64,
-        t1: f64,
-        t2: f64,
+        vfov: f32,
+        aspect_ratio: f32,
+        aperture: f32,
+        focus_dist: f32,
+        t1: f32,
+        t2: f32,
     ) -> Self {
-        let theta = vfov * std::f64::consts::PI / 180.0;
+        let theta = vfov * std::f32::consts::PI / 180.0;
         let viewport_height = 2.0 * (theta / 2.0).tan();
         let viewport_width = viewport_height * aspect_ratio;
 
@@ -54,7 +54,7 @@ impl Camera {
             t2,
         }
     }
-    pub fn get_ray(&self, u: f64, v: f64, rng: &mut SmallRng) -> Ray {
+    pub fn get_ray(&self, u: f32, v: f32, rng: &mut SmallRng) -> Ray {
         let rd = random_in_unit_disk(rng) * self.lens_radius;
         let offset = self.u * rd.x + self.v * rd.y;
         Ray::new(

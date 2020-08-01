@@ -5,14 +5,14 @@ pub use crate::ray::Ray;
 pub use crate::texture::*;
 pub use crate::vec3::*;
 
-fn schlick(cosine: f64, ref_idx: f64) -> f64 {
+fn schlick(cosine: f32, ref_idx: f32) -> f32 {
     let r0 = ((1.0 - ref_idx) / (1.0 + ref_idx)) * ((1.0 - ref_idx) / (1.0 + ref_idx));
     r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
 }
 
 pub trait Material: Sync + Send {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<(Vec3, Ray)>;
-    fn emitted(&self, _r_in: &Ray, _rec: &HitRecord, _u: f64, _v: f64, _p: Vec3) -> Vec3 {
+    fn emitted(&self, _r_in: &Ray, _rec: &HitRecord, _u: f32, _v: f32, _p: Vec3) -> Vec3 {
         Vec3::zero()
     }
 }
@@ -34,7 +34,7 @@ impl<T: Texture> Material for Lambertian<T> {
 #[derive(Clone)]
 pub struct Metal {
     pub albedo: Vec3,
-    pub fuzz: f64,
+    pub fuzz: f32,
 }
 impl Material for Metal {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<(Vec3, Ray)> {
@@ -54,7 +54,7 @@ impl Material for Metal {
 
 #[derive(Clone)]
 pub struct Dielectric {
-    pub ref_idx: f64,
+    pub ref_idx: f32,
 }
 impl Material for Dielectric {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<(Vec3, Ray)> {
@@ -69,7 +69,7 @@ impl Material for Dielectric {
         }
         let cos_theta = (-r_in.dir.unit() * real_normal).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
-        if etai_over_etat * sin_theta <= 1.0 && rng.gen::<f64>() > schlick(cos_theta, self.ref_idx)
+        if etai_over_etat * sin_theta <= 1.0 && rng.gen::<f32>() > schlick(cos_theta, self.ref_idx)
         {
             let refracted = refract(r_in.dir.unit(), real_normal, etai_over_etat);
             return Some((Vec3::ones(), Ray::new(rec.p, refracted, r_in.time)));
@@ -83,8 +83,8 @@ impl Material for Dielectric {
 
 #[derive(Clone)]
 pub struct FrostedDielectric {
-    pub ref_idx: f64,
-    pub fuzz: f64,
+    pub ref_idx: f32,
+    pub fuzz: f32,
 }
 impl Material for FrostedDielectric {
     fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<(Vec3, Ray)> {
@@ -99,7 +99,7 @@ impl Material for FrostedDielectric {
         }
         let cos_theta = (-r_in.dir.unit() * real_normal).min(1.0);
         let sin_theta = (1.0 - cos_theta * cos_theta).sqrt();
-        if etai_over_etat * sin_theta <= 1.0 && rng.gen::<f64>() > schlick(cos_theta, self.ref_idx)
+        if etai_over_etat * sin_theta <= 1.0 && rng.gen::<f32>() > schlick(cos_theta, self.ref_idx)
         {
             let refracted = refract(r_in.dir.unit(), real_normal, etai_over_etat);
             return Some((
@@ -126,7 +126,7 @@ impl<T: Texture> Material for DiffuseLight<T> {
     fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _rng: &mut SmallRng) -> Option<(Vec3, Ray)> {
         None
     }
-    fn emitted(&self, r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: Vec3) -> Vec3 {
+    fn emitted(&self, r_in: &Ray, rec: &HitRecord, u: f32, v: f32, p: Vec3) -> Vec3 {
         if r_in.dir * rec.normal < 0.0 {
             self.emit.value(u, v, p)
         } else {

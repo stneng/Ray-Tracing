@@ -7,7 +7,7 @@ pub use crate::objects::*;
 pub use crate::ray::Ray;
 pub use crate::vec3::Vec3;
 
-pub fn random_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
+pub fn random_scene(aspect_ratio: f32) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut rng = SmallRng::from_entropy();
     let mut world = ObjectList { objects: vec![] };
     world.add(Arc::new(Sphere {
@@ -28,12 +28,12 @@ pub fn random_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     for a in -11..11 {
         for b in -11..11 {
             let center = Vec3::new(
-                a as f64 + 0.9 * rng.gen::<f64>(),
+                a as f32 + 0.9 * rng.gen::<f32>(),
                 0.2,
-                b as f64 + 0.9 * rng.gen::<f64>(),
+                b as f32 + 0.9 * rng.gen::<f32>(),
             );
             if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
-                let rd = rng.gen::<f64>();
+                let rd = rng.gen::<f32>();
                 if rd < 0.8 {
                     box1.add(Arc::new(MovingSphere {
                         center1: center,
@@ -109,7 +109,7 @@ pub fn random_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
         )),
     )
 }
-pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
+pub fn random_scene_light(aspect_ratio: f32) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut rng = SmallRng::from_entropy();
     let mut world = ObjectList { objects: vec![] };
     world.add(Arc::new(Sphere {
@@ -136,9 +136,9 @@ pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
         for b in -11..11 {
             let mut radius = rng.gen_range(0.08, 0.25);
             let mut center = Vec3::new(
-                (a as f64 + 0.9 * rng.gen::<f64>()) / 2.0,
+                (a as f32 + 0.9 * rng.gen::<f32>()) / 2.0,
                 radius,
-                (b as f64 + 0.9 * rng.gen::<f64>()) / 2.0,
+                (b as f32 + 0.9 * rng.gen::<f32>()) / 2.0,
             );
             loop {
                 let mut done = true;
@@ -153,14 +153,14 @@ pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
                 }
                 radius = rng.gen_range(0.08, 0.25);
                 center = Vec3::new(
-                    (a as f64 + 0.9 * rng.gen::<f64>()) / 2.0,
+                    (a as f32 + 0.9 * rng.gen::<f32>()) / 2.0,
                     radius,
-                    (b as f64 + 0.9 * rng.gen::<f64>()) / 2.0,
+                    (b as f32 + 0.9 * rng.gen::<f32>()) / 2.0,
                 );
             }
             box1_sphere.push((center, radius));
             if (center - Vec3::new(0.0, radius, 0.0)).length() > 1.3 {
-                let rd = rng.gen::<f64>();
+                let rd = rng.gen::<f32>();
                 if rd < 0.2 {
                     box1.add(Arc::new(Sphere {
                         center,
@@ -270,7 +270,7 @@ pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
         )),
     )
 }
-pub fn two_checker_spheres(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
+pub fn two_checker_spheres(aspect_ratio: f32) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut world = ObjectList { objects: vec![] };
     world.add(Arc::new(Sphere {
         center: Vec3::new(0.0, -10.0, 0.0),
@@ -316,7 +316,7 @@ pub fn two_checker_spheres(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Cam
         )),
     )
 }
-pub fn two_perlin_spheres(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
+pub fn two_perlin_spheres(aspect_ratio: f32) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut world = ObjectList { objects: vec![] };
     world.add(Arc::new(Sphere {
         center: Vec3::new(0.0, -1000.0, 0.0),
@@ -354,7 +354,7 @@ pub fn two_perlin_spheres(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
         )),
     )
 }
-pub fn earth(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
+pub fn earth(aspect_ratio: f32) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut world = ObjectList { objects: vec![] };
     world.add(Arc::new(Sphere {
         center: Vec3::new(0.0, 0.0, 0.0),
@@ -379,7 +379,7 @@ pub fn earth(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
         )),
     )
 }
-pub fn simple_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
+pub fn simple_light(aspect_ratio: f32) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut world = ObjectList { objects: vec![] };
     world.add(Arc::new(Sphere {
         center: Vec3::new(0.0, -1000.0, 0.0),
@@ -430,7 +430,7 @@ pub fn simple_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
         )),
     )
 }
-pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
+pub fn cornell_box(aspect_ratio: f32) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut world = ObjectList { objects: vec![] };
     world.add(Arc::new(RectYZ {
         y1: 0.0,

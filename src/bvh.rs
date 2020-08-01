@@ -26,7 +26,7 @@ impl Aabb {
             ),
         }
     }
-    pub fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> bool {
+    pub fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> bool {
         {
             let mut t1 = (self.min.x - ray.ori.x) / ray.dir.x;
             let mut t2 = (self.max.x - ray.ori.x) / ray.dir.x;
@@ -71,8 +71,8 @@ impl BvhNode {
         objects: &mut Vec<Arc<dyn Object>>,
         start: usize,
         end: usize,
-        t1: f64,
-        t2: f64,
+        t1: f32,
+        t2: f32,
     ) -> BvhNode {
         let left;
         let right;
@@ -106,7 +106,7 @@ impl BvhNode {
     }
 }
 impl Object for BvhNode {
-    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+    fn hit(&self, ray: &Ray, t_min: f32, t_max: f32) -> Option<HitRecord> {
         if !self.boxx.hit(ray, t_min, t_max) {
             return None;
         }
@@ -122,7 +122,7 @@ impl Object for BvhNode {
         }
         None
     }
-    fn bounding_box(&self, _t1: f64, _t2: f64) -> Option<Aabb> {
+    fn bounding_box(&self, _t1: f32, _t2: f32) -> Option<Aabb> {
         Some(self.boxx.clone())
     }
 }

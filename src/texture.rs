@@ -7,7 +7,7 @@ pub use crate::ray::Ray;
 pub use crate::vec3::*;
 
 pub trait Texture: Sync + Send {
-    fn value(&self, u: f64, v: f64, p: Vec3) -> Vec3;
+    fn value(&self, u: f32, v: f32, p: Vec3) -> Vec3;
 }
 
 #[derive(Clone)]
@@ -15,7 +15,7 @@ pub struct SolidColor {
     pub color: Vec3,
 }
 impl Texture for SolidColor {
-    fn value(&self, _u: f64, _v: f64, _p: Vec3) -> Vec3 {
+    fn value(&self, _u: f32, _v: f32, _p: Vec3) -> Vec3 {
         self.color
     }
 }
@@ -26,7 +26,7 @@ pub struct CheckerTextureUV<T1: Texture, T2: Texture> {
     pub even: T2,
 }
 impl<T1: Texture, T2: Texture> Texture for CheckerTextureUV<T1, T2> {
-    fn value(&self, u: f64, v: f64, p: Vec3) -> Vec3 {
+    fn value(&self, u: f32, v: f32, p: Vec3) -> Vec3 {
         if (u / 0.01) as i32 % 2 == (v / 0.01) as i32 % 2 {
             self.odd.value(u, v, p)
         } else {
@@ -41,7 +41,7 @@ pub struct CheckerTexture<T1: Texture, T2: Texture> {
     pub even: T2,
 }
 impl<T1: Texture, T2: Texture> Texture for CheckerTexture<T1, T2> {
-    fn value(&self, u: f64, v: f64, p: Vec3) -> Vec3 {
+    fn value(&self, u: f32, v: f32, p: Vec3) -> Vec3 {
         let sines = (10.0 * p.x).sin() * (10.0 * p.y).sin() * (10.0 * p.z).sin();
         if sines < 0.0 {
             self.odd.value(u, v, p)
@@ -54,10 +54,10 @@ impl<T1: Texture, T2: Texture> Texture for CheckerTexture<T1, T2> {
 #[derive(Clone)]
 pub struct NoiseTexture {
     pub noise: Perlin,
-    pub scale: f64,
+    pub scale: f32,
 }
 impl Texture for NoiseTexture {
-    fn value(&self, _u: f64, _v: f64, p: Vec3) -> Vec3 {
+    fn value(&self, _u: f32, _v: f32, p: Vec3) -> Vec3 {
         Vec3::ones() * 0.5 * (1.0 + (self.scale * p.z + 10.0 * self.noise.turb(p, 7)).sin())
     }
 }
@@ -76,25 +76,25 @@ impl ImageTexture {
     }
 }
 impl Texture for ImageTexture {
-    fn value(&self, u: f64, v: f64, _p: Vec3) -> Vec3 {
+    fn value(&self, u: f32, v: f32, _p: Vec3) -> Vec3 {
         let u = num::clamp(u, 0.0, 1.0);
         let v = num::clamp(v, 0.0, 1.0);
         let x = num::clamp(
-            (u * self.img.width() as f64) as u32,
+            (u * self.img.width() as f32) as u32,
             0,
             self.img.width() - 1,
         );
         let y = num::clamp(
-            (v * self.img.height() as f64) as u32,
+            (v * self.img.height() as f32) as u32,
             0,
             self.img.height() - 1,
         );
         let color_scale = 1.0 / 255.0;
         let pixel = self.img.get_pixel(x, self.img.height() - 1 - y);
         Vec3::new(
-            pixel[0] as f64 * color_scale,
-            pixel[1] as f64 * color_scale,
-            pixel[2] as f64 * color_scale,
+            pixel[0] as f32 * color_scale,
+            pixel[1] as f32 * color_scale,
+            pixel[2] as f32 * color_scale,
         )
     }
 }
@@ -133,7 +133,7 @@ impl Perlin {
         ans
     }
     #[allow(clippy::many_single_char_names)]
-    pub fn noise(&self, p: Vec3) -> f64 {
+    pub fn noise(&self, p: Vec3) -> f32 {
         let u = p.x - p.x.floor();
         let v = p.y - p.y.floor();
         let w = p.z - p.z.floor();
@@ -151,16 +151,16 @@ impl Perlin {
                         ^ self.perm_y[((j + dj) & 255) as usize]
                         ^ self.perm_z[((k + dk) & 255) as usize])
                         as usize];
-                    accum += (di as f64 * uu + (1.0 - di as f64) * (1.0 - uu))
-                        * (dj as f64 * vv + (1.0 - dj as f64) * (1.0 - vv))
-                        * (dk as f64 * ww + (1.0 - dk as f64) * (1.0 - ww))
-                        * (c * Vec3::new(u - di as f64, v - dj as f64, w - dk as f64));
+                    accum += (di as f32 * uu + (1.0 - di as f32) * (1.0 - uu))
+                        * (dj as f32 * vv + (1.0 - dj as f32) * (1.0 - vv))
+                        * (dk as f32 * ww + (1.0 - dk as f32) * (1.0 - ww))
+                        * (c * Vec3::new(u - di as f32, v - dj as f32, w - dk as f32));
                 }
             }
         }
         accum
     }
-    pub fn turb(&self, p: Vec3, depth: i32) -> f64 {
+    pub fn turb(&self, p: Vec3, depth: i32) -> f32 {
         let mut accum = 0.0;
         let mut temp_p = p;
         let mut weight = 1.0;
