@@ -2,8 +2,9 @@ use std::sync::Arc;
 
 pub use crate::bvh::*;
 pub use crate::materials::*;
-pub use crate::ray::Ray;
-pub use crate::vec3::Vec3;
+pub use crate::ray::*;
+pub use crate::transforms::*;
+pub use crate::vec3::*;
 
 #[derive(Clone)]
 pub struct HitRecord<'a> {

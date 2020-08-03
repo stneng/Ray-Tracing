@@ -4,12 +4,9 @@ use rand::{rngs::SmallRng, Rng, SeedableRng};
 use std::sync::mpsc;
 use threadpool::ThreadPool;
 
-pub use crate::bvh::*;
 pub use crate::camera::Camera;
 pub use crate::objects::*;
-pub use crate::ray::Ray;
 pub use crate::scenes::*;
-pub use crate::vec3::Vec3;
 
 fn ray_color(
     ray: &Ray,
@@ -21,7 +18,7 @@ fn ray_color(
     if depth <= 0 {
         return Vec3::zero();
     }
-    if let Some(rec) = world.hit(ray, 0.001, 233333333333.0) {
+    if let Some(rec) = world.hit(ray, 0.001, f64::MAX) {
         let emitted = rec.mat_ptr.emitted(ray, &rec, rec.u, rec.v, rec.p);
         if let Some((attenuation, scattered)) = rec.mat_ptr.scatter(ray, &rec, rng) {
             return emitted

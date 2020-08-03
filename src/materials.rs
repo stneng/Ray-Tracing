@@ -1,9 +1,7 @@
 use rand::{rngs::SmallRng, Rng};
 
 pub use crate::objects::*;
-pub use crate::ray::Ray;
 pub use crate::texture::*;
-pub use crate::vec3::*;
 
 fn schlick(cosine: f64, ref_idx: f64) -> f64 {
     let r0 = ((1.0 - ref_idx) / (1.0 + ref_idx)) * ((1.0 - ref_idx) / (1.0 + ref_idx));

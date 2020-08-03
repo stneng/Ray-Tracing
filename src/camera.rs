@@ -1,6 +1,6 @@
 use rand::{rngs::SmallRng, Rng};
 
-pub use crate::ray::Ray;
+pub use crate::ray::*;
 pub use crate::vec3::*;
 
 #[derive(Clone)]

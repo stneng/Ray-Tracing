@@ -1,11 +1,8 @@
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use std::sync::Arc;
 
-pub use crate::bvh::*;
 pub use crate::camera::Camera;
 pub use crate::objects::*;
-pub use crate::ray::Ray;
-pub use crate::vec3::Vec3;
 
 pub fn random_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut rng = SmallRng::from_entropy();
@@ -510,23 +507,35 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             },
         },
     }));
-    world.add(Arc::new(Cuboid::new(
-        Vec3::new(130.0, 0.0, 65.0),
-        Vec3::new(295.0, 165.0, 230.0),
-        Lambertian {
-            albedo: SolidColor {
-                color: Vec3::new(0.73, 0.73, 0.73),
-            },
-        },
-    )));
-    world.add(Arc::new(Cuboid::new(
+    world.add(Arc::new(Translate::new(
+        RotateY::new(
+            Cuboid::new(
+                Vec3::new(0.0, 0.0, 0.0),
+                Vec3::new(165.0, 330.0, 165.0),
+                Lambertian {
+                    albedo: SolidColor {
+                        color: Vec3::new(0.73, 0.73, 0.73),
+                    },
+                },
+            ),
+            15.0,
+        ),
         Vec3::new(265.0, 0.0, 295.0),
-        Vec3::new(430.0, 330.0, 460.0),
-        Lambertian {
-            albedo: SolidColor {
-                color: Vec3::new(0.73, 0.73, 0.73),
-            },
-        },
+    )));
+    world.add(Arc::new(Translate::new(
+        RotateY::new(
+            Cuboid::new(
+                Vec3::new(0.0, 0.0, 0.0),
+                Vec3::new(165.0, 165.0, 165.0),
+                Lambertian {
+                    albedo: SolidColor {
+                        color: Vec3::new(0.73, 0.73, 0.73),
+                    },
+                },
+            ),
+            -18.0,
+        ),
+        Vec3::new(130.0, 0.0, 65.0),
     )));
     (
         Arc::new(world),

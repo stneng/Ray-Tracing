@@ -8,6 +8,7 @@ mod ray_tracing;
 #[allow(dead_code)]
 mod scenes;
 mod texture;
+mod transforms;
 #[allow(clippy::float_cmp)]
 mod vec3;
 fn main() {

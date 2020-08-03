@@ -3,8 +3,6 @@ use std::cmp::Ordering;
 use std::sync::Arc;
 
 pub use crate::objects::*;
-pub use crate::ray::Ray;
-pub use crate::vec3::Vec3;
 
 #[derive(Clone)]
 pub struct Aabb {
