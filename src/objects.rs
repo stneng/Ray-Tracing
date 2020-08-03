@@ -397,3 +397,51 @@ impl<T: Material + Clone> Object for Cuboid<T> {
         })
     }
 }
+
+pub struct ConstantMedium<T1: Object, T2: Material> {
+    pub boundary: T1,
+    pub phase_function: T2,
+    pub density: f64,
+}
+impl<T1: Object, T2: Texture> ConstantMedium<T1, Isotropic<T2>> {
+    pub fn new(boundary: T1, texture: T2, density: f64) -> Self {
+        Self {
+            boundary,
+            phase_function: Isotropic { albedo: texture },
+            density,
+        }
+    }
+}
+impl<T1: Object, T2: Material> Object for ConstantMedium<T1, T2> {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        if let Some(mut rec1) = self.boundary.hit(ray, f64::MIN, f64::MAX) {
+            if let Some(mut rec2) = self.boundary.hit(ray, rec1.t + 0.0001, f64::MAX) {
+                if rec1.t < t_min {
+                    rec1.t = t_min;
+                }
+                if rec2.t > t_max {
+                    rec2.t = t_max;
+                }
+                if rec1.t < rec2.t {
+                    let distance_inside_boundary = (rec2.t - rec1.t) * ray.dir.length();
+                    let hit_distance = -(1.0 / self.density) * rand::random::<f64>().ln();
+                    if hit_distance <= distance_inside_boundary {
+                        let t = rec1.t + hit_distance / ray.dir.length();
+                        return Some(HitRecord {
+                            t,
+                            p: ray.at(t),
+                            normal: Vec3::new(1.0, 0.0, 0.0),
+                            mat_ptr: &self.phase_function,
+                            u: 0.0,
+                            v: 0.0,
+                        });
+                    }
+                }
+            }
+        }
+        None
+    }
+    fn bounding_box(&self, t1: f64, t2: f64) -> Option<Aabb> {
+        self.boundary.bounding_box(t1, t2)
+    }
+}

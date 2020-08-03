@@ -4,7 +4,7 @@ use rand::{rngs::SmallRng, Rng, SeedableRng};
 use std::sync::mpsc;
 use threadpool::ThreadPool;
 
-pub use crate::camera::Camera;
+pub use crate::camera::*;
 pub use crate::objects::*;
 pub use crate::scenes::*;
 
@@ -48,7 +48,7 @@ pub fn run_ray_tracing() {
         (600, 600, 64, 16)
     };
 
-    let (world, background, cam) = cornell_box(image_width as f64 / image_height as f64);
+    let (world, background, cam) = cornell_smoke(image_width as f64 / image_height as f64);
 
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
     let pbar = ProgressBar::new(image_width as u64);

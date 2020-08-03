@@ -132,3 +132,16 @@ impl<T: Texture> Material for DiffuseLight<T> {
         }
     }
 }
+
+#[derive(Clone)]
+pub struct Isotropic<T: Texture> {
+    pub albedo: T,
+}
+impl<T: Texture> Material for Isotropic<T> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<(Vec3, Ray)> {
+        Some((
+            self.albedo.value(rec.u, rec.v, rec.p),
+            Ray::new(rec.p, random_in_unit_sphere(rng), r_in.time),
+        ))
+    }
+}

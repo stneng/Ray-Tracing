@@ -2,9 +2,7 @@ use image::RgbImage;
 use rand::seq::SliceRandom;
 use rand::{rngs::SmallRng, SeedableRng};
 
-pub use crate::objects::*;
-pub use crate::ray::Ray;
-pub use crate::vec3::*;
+pub use crate::materials::*;
 
 pub trait Texture: Sync + Send {
     fn value(&self, u: f64, v: f64, p: Vec3) -> Vec3;

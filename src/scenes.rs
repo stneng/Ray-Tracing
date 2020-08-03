@@ -1,7 +1,7 @@
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 use std::sync::Arc;
 
-pub use crate::camera::Camera;
+pub use crate::camera::*;
 pub use crate::objects::*;
 
 pub fn random_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
@@ -536,6 +536,144 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             -18.0,
         ),
         Vec3::new(130.0, 0.0, 65.0),
+    )));
+    (
+        Arc::new(world),
+        Vec3::zero(),
+        Arc::new(Camera::new(
+            Vec3::new(278.0, 278.0, -800.0),
+            Vec3::new(278.0, 278.0, 0.0),
+            Vec3::new(0.0, 1.0, 0.0),
+            40.0,
+            aspect_ratio,
+            0.0,
+            28.3,
+            0.0,
+            1.0,
+        )),
+    )
+}
+pub fn cornell_smoke(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
+    let mut world = ObjectList { objects: vec![] };
+    world.add(Arc::new(RectYZ {
+        y1: 0.0,
+        y2: 555.0,
+        z1: 0.0,
+        z2: 555.0,
+        k: 555.0,
+        face: -1.0,
+        material: Lambertian {
+            albedo: SolidColor {
+                color: Vec3::new(0.12, 0.45, 0.15),
+            },
+        },
+    }));
+    world.add(Arc::new(RectYZ {
+        y1: 0.0,
+        y2: 555.0,
+        z1: 0.0,
+        z2: 555.0,
+        k: 0.0,
+        face: 1.0,
+        material: Lambertian {
+            albedo: SolidColor {
+                color: Vec3::new(0.65, 0.05, 0.05),
+            },
+        },
+    }));
+    world.add(Arc::new(RectXZ {
+        x1: 113.0,
+        x2: 443.0,
+        z1: 127.0,
+        z2: 432.0,
+        k: 554.0,
+        face: -1.0,
+        material: DiffuseLight {
+            emit: SolidColor {
+                color: Vec3::new(7.0, 7.0, 7.0),
+            },
+        },
+    }));
+    world.add(Arc::new(RectXZ {
+        x1: 0.0,
+        x2: 555.0,
+        z1: 0.0,
+        z2: 555.0,
+        k: 0.0,
+        face: 1.0,
+        material: Lambertian {
+            albedo: SolidColor {
+                color: Vec3::new(0.73, 0.73, 0.73),
+            },
+        },
+    }));
+    world.add(Arc::new(RectXZ {
+        x1: 0.0,
+        x2: 555.0,
+        z1: 0.0,
+        z2: 555.0,
+        k: 555.0,
+        face: -1.0,
+        material: Lambertian {
+            albedo: SolidColor {
+                color: Vec3::new(0.73, 0.73, 0.73),
+            },
+        },
+    }));
+    world.add(Arc::new(RectXY {
+        x1: 0.0,
+        x2: 555.0,
+        y1: 0.0,
+        y2: 555.0,
+        k: 555.0,
+        face: -1.0,
+        material: Lambertian {
+            albedo: SolidColor {
+                color: Vec3::new(0.73, 0.73, 0.73),
+            },
+        },
+    }));
+    world.add(Arc::new(ConstantMedium::new(
+        Translate::new(
+            RotateY::new(
+                Cuboid::new(
+                    Vec3::new(0.0, 0.0, 0.0),
+                    Vec3::new(165.0, 330.0, 165.0),
+                    Lambertian {
+                        albedo: SolidColor {
+                            color: Vec3::new(0.73, 0.73, 0.73),
+                        },
+                    },
+                ),
+                15.0,
+            ),
+            Vec3::new(265.0, 0.0, 295.0),
+        ),
+        SolidColor {
+            color: Vec3::zero(),
+        },
+        0.01,
+    )));
+    world.add(Arc::new(ConstantMedium::new(
+        Translate::new(
+            RotateY::new(
+                Cuboid::new(
+                    Vec3::new(0.0, 0.0, 0.0),
+                    Vec3::new(165.0, 165.0, 165.0),
+                    Lambertian {
+                        albedo: SolidColor {
+                            color: Vec3::new(0.73, 0.73, 0.73),
+                        },
+                    },
+                ),
+                -18.0,
+            ),
+            Vec3::new(130.0, 0.0, 65.0),
+        ),
+        SolidColor {
+            color: Vec3::ones(),
+        },
+        0.01,
     )));
     (
         Arc::new(world),
