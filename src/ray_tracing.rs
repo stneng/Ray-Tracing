@@ -43,7 +43,7 @@ pub fn run_ray_tracing() {
         Err(_) => false,
     };
     let (image_width, image_height, samples_per_pixel, thread_num) = if is_ci {
-        (1600, 1600, 256, 2)
+        (800, 800, 10000, 96)
     } else {
         (600, 600, 64, 16)
     };
