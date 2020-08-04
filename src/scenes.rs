@@ -691,3 +691,144 @@ pub fn cornell_smoke(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) 
         )),
     )
 }
+pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
+    let mut rng = SmallRng::from_entropy();
+    let mut world = ObjectList { objects: vec![] };
+    let mut box1 = ObjectList { objects: vec![] };
+    for i in 0..20 {
+        for j in 0..20 {
+            let w = 100.0;
+            let x1 = -1000.0 + i as f64 * w;
+            let y1 = 0.0;
+            let z1 = -1000.0 + j as f64 * w;
+            let x2 = x1 + w;
+            let y2 = rng.gen_range(1.0, 101.0);
+            let z2 = z1 + w;
+            box1.add(Arc::new(Cuboid::new(
+                Vec3::new(x1, y1, z1),
+                Vec3::new(x2, y2, z2),
+                Lambertian {
+                    albedo: SolidColor {
+                        color: Vec3::new(0.48, 0.83, 0.53),
+                    },
+                },
+            )));
+        }
+    }
+    let len = box1.objects.len();
+    world.add(Arc::new(BvhNode::new(&mut box1.objects, 0, len, 0.0, 1.0)));
+    world.add(Arc::new(RectXZ {
+        x1: 123.0,
+        x2: 423.0,
+        z1: 147.0,
+        z2: 412.0,
+        k: 554.0,
+        face: -1.0,
+        material: DiffuseLight {
+            emit: SolidColor {
+                color: Vec3::new(7.0, 7.0, 7.0),
+            },
+        },
+    }));
+    world.add(Arc::new(MovingSphere {
+        center1: Vec3::new(400.0, 400.0, 200.0),
+        center2: Vec3::new(400.0, 400.0, 200.0) + Vec3::new(30.0, 0.0, 0.0),
+        t1: 0.0,
+        t2: 1.0,
+        radius: 50.0,
+        material: Lambertian {
+            albedo: SolidColor {
+                color: Vec3::new(0.7, 0.3, 0.1),
+            },
+        },
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3::new(260.0, 150.0, 45.0),
+        radius: 50.0,
+        material: Dielectric { ref_idx: 1.5 },
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3::new(0.0, 150.0, 145.0),
+        radius: 50.0,
+        material: Metal {
+            albedo: Vec3::new(0.8, 0.8, 0.9),
+            fuzz: 10.0,
+        },
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3::new(360.0, 150.0, 145.0),
+        radius: 70.0,
+        material: Dielectric { ref_idx: 1.5 },
+    }));
+    world.add(Arc::new(ConstantMedium::new(
+        Sphere {
+            center: Vec3::new(360.0, 150.0, 145.0),
+            radius: 70.0,
+            material: Dielectric { ref_idx: 1.5 },
+        },
+        SolidColor {
+            color: Vec3::new(0.2, 0.4, 0.9),
+        },
+        0.2,
+    )));
+    world.add(Arc::new(ConstantMedium::new(
+        Sphere {
+            center: Vec3::new(0.0, 0.0, 0.0),
+            radius: 5000.0,
+            material: Dielectric { ref_idx: 1.5 },
+        },
+        SolidColor {
+            color: Vec3::ones(),
+        },
+        0.0001,
+    )));
+    world.add(Arc::new(Sphere {
+        center: Vec3::new(400.0, 200.0, 400.0),
+        radius: 100.0,
+        material: Lambertian {
+            albedo: ImageTexture::new("images/earthmap.jpg"),
+        },
+    }));
+    world.add(Arc::new(Sphere {
+        center: Vec3::new(220.0, 280.0, 300.0),
+        radius: 80.0,
+        material: Lambertian {
+            albedo: NoiseTexture {
+                noise: Perlin::new(),
+                scale: 0.1,
+            },
+        },
+    }));
+    let mut box2 = ObjectList { objects: vec![] };
+    for _ in 0..1000 {
+        box2.add(Arc::new(Sphere {
+            center: Vec3::random(0.0, 165.0, &mut rng),
+            radius: 10.0,
+            material: Lambertian {
+                albedo: SolidColor {
+                    color: Vec3::new(0.73, 0.73, 0.73),
+                },
+            },
+        }))
+    }
+    let len = box2.objects.len();
+    world.add(Arc::new(Translate::new(
+        RotateY::new(BvhNode::new(&mut box2.objects, 0, len, 0.0, 1.0), 15.0),
+        Vec3::new(-100.0, 270.0, 395.0),
+    )));
+    (
+        Arc::new(world),
+        Vec3::zero(),
+        Arc::new(Camera::new(
+            Vec3::new(478.0, 278.0, -600.0),
+            Vec3::new(278.0, 278.0, 0.0),
+            Vec3::new(0.0, 1.0, 0.0),
+            40.0,
+            aspect_ratio,
+            0.0,
+            28.3,
+            0.0,
+            1.0,
+        )),
+    )
+}
