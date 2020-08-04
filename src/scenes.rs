@@ -752,7 +752,7 @@ pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
         radius: 50.0,
         material: Metal {
             albedo: Vec3::new(0.8, 0.8, 0.9),
-            fuzz: 10.0,
+            fuzz: 1.0,
         },
     }));
     world.add(Arc::new(Sphere {
