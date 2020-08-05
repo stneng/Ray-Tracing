@@ -3,13 +3,14 @@ mod camera;
 mod bvh;
 mod materials;
 mod objects;
+mod pdf;
 mod ray;
 mod ray_tracing;
 #[allow(dead_code)]
 mod scenes;
 mod texture;
 mod transforms;
-#[allow(clippy::float_cmp)]
+#[allow(clippy::float_cmp, dead_code)]
 mod vec3;
 fn main() {
     //image_test::run_test();

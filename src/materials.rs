@@ -8,10 +8,23 @@ fn schlick(cosine: f64, ref_idx: f64) -> f64 {
     r0 + (1.0 - r0) * (1.0 - cosine).powi(5)
 }
 
+pub enum ScatterRecord {
+    Specular {
+        attenuation: Vec3,
+        specular_ray: Ray,
+    },
+    Diffuse {
+        attenuation: Vec3,
+        pdf: CosinePDF,
+    },
+}
 pub trait Material: Sync + Send {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<(Vec3, Ray)>;
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<ScatterRecord>;
     fn emitted(&self, _r_in: &Ray, _rec: &HitRecord, _u: f64, _v: f64, _p: Vec3) -> Vec3 {
         Vec3::zero()
+    }
+    fn scattering_pdf(&self, _r_in: &Ray, _rec: &HitRecord, _scattered: &Ray) -> f64 {
+        0.0
     }
 }
 
@@ -20,12 +33,19 @@ pub struct Lambertian<T: Texture> {
     pub albedo: T,
 }
 impl<T: Texture> Material for Lambertian<T> {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<(Vec3, Ray)> {
-        let target = rec.p + rec.normal + random_unit_vector(rng);
-        Some((
-            self.albedo.value(rec.u, rec.v, rec.p),
-            Ray::new(rec.p, target - rec.p, r_in.time),
-        ))
+    fn scatter(&self, _r_in: &Ray, rec: &HitRecord, _rng: &mut SmallRng) -> Option<ScatterRecord> {
+        Some(ScatterRecord::Diffuse {
+            attenuation: self.albedo.value(rec.u, rec.v, rec.p),
+            pdf: CosinePDF::new(rec.normal),
+        })
+    }
+    fn scattering_pdf(&self, _r_in: &Ray, rec: &HitRecord, scattered: &Ray) -> f64 {
+        let cosine = rec.normal * scattered.dir.unit();
+        if cosine > 0.0 {
+            cosine / std::f64::consts::PI
+        } else {
+            0.0
+        }
     }
 }
 
@@ -35,7 +55,7 @@ pub struct Metal {
     pub fuzz: f64,
 }
 impl Material for Metal {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<ScatterRecord> {
         let reflected = reflect(r_in.dir.unit(), rec.normal);
         let scattered = Ray::new(
             rec.p,
@@ -43,7 +63,10 @@ impl Material for Metal {
             r_in.time,
         );
         if scattered.dir * rec.normal > 0.0 {
-            Some((self.albedo, scattered))
+            Some(ScatterRecord::Specular {
+                attenuation: self.albedo,
+                specular_ray: scattered,
+            })
         } else {
             None
         }
@@ -55,7 +78,7 @@ pub struct Dielectric {
     pub ref_idx: f64,
 }
 impl Material for Dielectric {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<ScatterRecord> {
         let etai_over_etat;
         let real_normal;
         if r_in.dir * rec.normal > 0.0 {
@@ -70,12 +93,15 @@ impl Material for Dielectric {
         if etai_over_etat * sin_theta <= 1.0 && rng.gen::<f64>() > schlick(cos_theta, self.ref_idx)
         {
             let refracted = refract(r_in.dir.unit(), real_normal, etai_over_etat);
-            return Some((Vec3::ones(), Ray::new(rec.p, refracted, r_in.time)));
+            return Some(ScatterRecord::Specular {
+                attenuation: Vec3::ones(),
+                specular_ray: Ray::new(rec.p, refracted, r_in.time),
+            });
         }
-        Some((
-            Vec3::ones(),
-            Ray::new(rec.p, reflect(r_in.dir.unit(), rec.normal), r_in.time),
-        ))
+        Some(ScatterRecord::Specular {
+            attenuation: Vec3::ones(),
+            specular_ray: Ray::new(rec.p, reflect(r_in.dir.unit(), rec.normal), r_in.time),
+        })
     }
 }
 
@@ -85,7 +111,7 @@ pub struct FrostedDielectric {
     pub fuzz: f64,
 }
 impl Material for FrostedDielectric {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<ScatterRecord> {
         let etai_over_etat;
         let real_normal;
         if r_in.dir * rec.normal > 0.0 {
@@ -100,19 +126,19 @@ impl Material for FrostedDielectric {
         if etai_over_etat * sin_theta <= 1.0 && rng.gen::<f64>() > schlick(cos_theta, self.ref_idx)
         {
             let refracted = refract(r_in.dir.unit(), real_normal, etai_over_etat);
-            return Some((
-                Vec3::ones(),
-                Ray::new(
+            return Some(ScatterRecord::Specular {
+                attenuation: Vec3::ones(),
+                specular_ray: Ray::new(
                     rec.p,
                     refracted + random_in_unit_sphere(rng) * self.fuzz,
                     r_in.time,
                 ),
-            ));
+            });
         }
-        Some((
-            Vec3::ones(),
-            Ray::new(rec.p, reflect(r_in.dir.unit(), rec.normal), r_in.time),
-        ))
+        Some(ScatterRecord::Specular {
+            attenuation: Vec3::ones(),
+            specular_ray: Ray::new(rec.p, reflect(r_in.dir.unit(), rec.normal), r_in.time),
+        })
     }
 }
 
@@ -121,7 +147,7 @@ pub struct DiffuseLight<T: Texture> {
     pub emit: T,
 }
 impl<T: Texture> Material for DiffuseLight<T> {
-    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _rng: &mut SmallRng) -> Option<(Vec3, Ray)> {
+    fn scatter(&self, _r_in: &Ray, _rec: &HitRecord, _rng: &mut SmallRng) -> Option<ScatterRecord> {
         None
     }
     fn emitted(&self, r_in: &Ray, rec: &HitRecord, u: f64, v: f64, p: Vec3) -> Vec3 {
@@ -138,10 +164,10 @@ pub struct Isotropic<T: Texture> {
     pub albedo: T,
 }
 impl<T: Texture> Material for Isotropic<T> {
-    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<(Vec3, Ray)> {
-        Some((
-            self.albedo.value(rec.u, rec.v, rec.p),
-            Ray::new(rec.p, random_in_unit_sphere(rng), r_in.time),
-        ))
+    fn scatter(&self, r_in: &Ray, rec: &HitRecord, rng: &mut SmallRng) -> Option<ScatterRecord> {
+        Some(ScatterRecord::Specular {
+            attenuation: self.albedo.value(rec.u, rec.v, rec.p),
+            specular_ray: Ray::new(rec.p, random_in_unit_sphere(rng), r_in.time),
+        })
     }
 }

@@ -1,7 +1,9 @@
+use rand::{rngs::SmallRng, Rng};
 use std::sync::Arc;
 
 pub use crate::bvh::*;
 pub use crate::materials::*;
+pub use crate::pdf::*;
 pub use crate::ray::*;
 pub use crate::transforms::*;
 pub use crate::vec3::*;
@@ -18,6 +20,12 @@ pub struct HitRecord<'a> {
 pub trait Object: Sync + Send {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord>;
     fn bounding_box(&self, t1: f64, t2: f64) -> Option<Aabb>;
+    fn pdf_value(&self, _origin: Vec3, _v: Vec3) -> f64 {
+        0.0
+    }
+    fn random(&self, _origin: Vec3, _rng: &mut SmallRng) -> Vec3 {
+        Vec3::new(1.0, 0.0, 0.0)
+    }
 }
 pub struct ObjectList {
     pub objects: Vec<Arc<dyn Object>>,
@@ -57,6 +65,17 @@ impl Object for ObjectList {
             }
         }
         Some(ans)
+    }
+    fn pdf_value(&self, origin: Vec3, v: Vec3) -> f64 {
+        let weight = 1.0 / self.objects.len() as f64;
+        let mut ans = 0.0;
+        for x in self.objects.iter() {
+            ans += weight * x.pdf_value(origin, v);
+        }
+        ans
+    }
+    fn random(&self, origin: Vec3, rng: &mut SmallRng) -> Vec3 {
+        self.objects[rng.gen_range(0, self.objects.len())].random(origin, rng)
     }
 }
 
@@ -212,6 +231,25 @@ impl<T: Material> Object for RectXY<T> {
             max: Vec3::new(self.x2, self.y2, self.k + 0.0001),
         })
     }
+    fn pdf_value(&self, origin: Vec3, v: Vec3) -> f64 {
+        match self.hit(&Ray::new(origin, v, 0.0), 0.001, f64::MAX) {
+            Some(rec) => {
+                let area = (self.x2 - self.x1) * (self.y2 - self.y1);
+                let distance_squared = rec.t * rec.t * v.squared_length();
+                let cosine = (v * rec.normal).abs() / v.length();
+                distance_squared / (cosine * area)
+            }
+            None => 0.0,
+        }
+    }
+    fn random(&self, origin: Vec3, rng: &mut SmallRng) -> Vec3 {
+        let random_point = Vec3::new(
+            rng.gen_range(self.x1, self.x2),
+            rng.gen_range(self.y1, self.y2),
+            self.k,
+        );
+        random_point - origin
+    }
 }
 pub struct RectXZ<T: Material> {
     pub x1: f64,
@@ -247,6 +285,25 @@ impl<T: Material> Object for RectXZ<T> {
             max: Vec3::new(self.x2, self.k + 0.0001, self.z2),
         })
     }
+    fn pdf_value(&self, origin: Vec3, v: Vec3) -> f64 {
+        match self.hit(&Ray::new(origin, v, 0.0), 0.001, f64::MAX) {
+            Some(rec) => {
+                let area = (self.x2 - self.x1) * (self.z2 - self.z1);
+                let distance_squared = rec.t * rec.t * v.squared_length();
+                let cosine = (v * rec.normal).abs() / v.length();
+                distance_squared / (cosine * area)
+            }
+            None => 0.0,
+        }
+    }
+    fn random(&self, origin: Vec3, rng: &mut SmallRng) -> Vec3 {
+        let random_point = Vec3::new(
+            rng.gen_range(self.x1, self.x2),
+            self.k,
+            rng.gen_range(self.z1, self.z2),
+        );
+        random_point - origin
+    }
 }
 pub struct RectYZ<T: Material> {
     pub y1: f64,
@@ -281,6 +338,25 @@ impl<T: Material> Object for RectYZ<T> {
             min: Vec3::new(self.k - 0.0001, self.y1, self.z1),
             max: Vec3::new(self.k + 0.0001, self.y2, self.z2),
         })
+    }
+    fn pdf_value(&self, origin: Vec3, v: Vec3) -> f64 {
+        match self.hit(&Ray::new(origin, v, 0.0), 0.001, f64::MAX) {
+            Some(rec) => {
+                let area = (self.y2 - self.y1) * (self.z2 - self.z1);
+                let distance_squared = rec.t * rec.t * v.squared_length();
+                let cosine = (v * rec.normal).abs() / v.length();
+                distance_squared / (cosine * area)
+            }
+            None => 0.0,
+        }
+    }
+    fn random(&self, origin: Vec3, rng: &mut SmallRng) -> Vec3 {
+        let random_point = Vec3::new(
+            self.k,
+            rng.gen_range(self.y1, self.y2),
+            rng.gen_range(self.z1, self.z2),
+        );
+        random_point - origin
     }
 }
 
@@ -395,6 +471,26 @@ impl<T: Material + Clone> Object for Cuboid<T> {
             min: self.box_min,
             max: self.box_max,
         })
+    }
+    fn pdf_value(&self, origin: Vec3, v: Vec3) -> f64 {
+        let weight = 1.0 / 6.0;
+        weight * self.sides.0.pdf_value(origin, v)
+            + weight * self.sides.1.pdf_value(origin, v)
+            + weight * self.sides.2.pdf_value(origin, v)
+            + weight * self.sides.3.pdf_value(origin, v)
+            + weight * self.sides.4.pdf_value(origin, v)
+            + weight * self.sides.5.pdf_value(origin, v)
+    }
+    fn random(&self, origin: Vec3, rng: &mut SmallRng) -> Vec3 {
+        match rng.gen_range(0, 6) {
+            0 => self.sides.0.random(origin, rng),
+            1 => self.sides.1.random(origin, rng),
+            2 => self.sides.2.random(origin, rng),
+            3 => self.sides.3.random(origin, rng),
+            4 => self.sides.4.random(origin, rng),
+            5 => self.sides.5.random(origin, rng),
+            _ => Vec3::new(1.0, 0.0, 0.0),
+        }
     }
 }
 

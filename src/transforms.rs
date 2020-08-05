@@ -1,3 +1,5 @@
+use rand::rngs::SmallRng;
+
 pub use crate::objects::*;
 
 pub struct Translate<T: Object> {
@@ -28,6 +30,12 @@ impl<T: Object> Object for Translate<T> {
             }),
             None => None,
         }
+    }
+    fn pdf_value(&self, origin: Vec3, v: Vec3) -> f64 {
+        self.object.pdf_value(origin - self.offset, v)
+    }
+    fn random(&self, origin: Vec3, rng: &mut SmallRng) -> Vec3 {
+        self.object.random(origin - self.offset, rng) + self.offset
     }
 }
 
@@ -112,5 +120,31 @@ impl<T: Object> Object for RotateY<T> {
     }
     fn bounding_box(&self, _t1: f64, _t2: f64) -> Option<Aabb> {
         self.boxx.clone()
+    }
+    fn pdf_value(&self, origin: Vec3, v: Vec3) -> f64 {
+        let rotated_origin = Vec3::new(
+            self.cos_theta * origin.x - self.sin_theta * origin.z,
+            origin.y,
+            self.sin_theta * origin.x + self.cos_theta * origin.z,
+        );
+        let rotated_v = Vec3::new(
+            self.cos_theta * v.x - self.sin_theta * v.z,
+            v.y,
+            self.sin_theta * v.x + self.cos_theta * v.z,
+        );
+        self.object.pdf_value(rotated_origin, rotated_v)
+    }
+    fn random(&self, origin: Vec3, rng: &mut SmallRng) -> Vec3 {
+        let rotated_origin = Vec3::new(
+            self.cos_theta * origin.x - self.sin_theta * origin.z,
+            origin.y,
+            self.sin_theta * origin.x + self.cos_theta * origin.z,
+        );
+        let rec = self.object.random(rotated_origin, rng);
+        Vec3::new(
+            self.cos_theta * rec.x + self.sin_theta * rec.z,
+            rec.y,
+            -self.sin_theta * rec.x + self.cos_theta * rec.z,
+        )
     }
 }

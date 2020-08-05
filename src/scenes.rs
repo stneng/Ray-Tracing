@@ -427,7 +427,7 @@ pub fn simple_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
         )),
     )
 }
-pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
+pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Arc<ObjectList>) {
     let mut world = ObjectList { objects: vec![] };
     world.add(Arc::new(RectYZ {
         y1: 0.0,
@@ -537,6 +537,20 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
         ),
         Vec3::new(130.0, 0.0, 65.0),
     )));
+    let mut lights = ObjectList { objects: vec![] };
+    lights.add(Arc::new(RectXZ {
+        x1: 213.0,
+        x2: 343.0,
+        z1: 227.0,
+        z2: 332.0,
+        k: 554.0,
+        face: -1.0,
+        material: DiffuseLight {
+            emit: SolidColor {
+                color: Vec3::new(15.0, 15.0, 15.0),
+            },
+        },
+    }));
     (
         Arc::new(world),
         Vec3::zero(),
@@ -551,6 +565,7 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             0.0,
             1.0,
         )),
+        Arc::new(lights),
     )
 }
 pub fn cornell_smoke(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {

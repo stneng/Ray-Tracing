@@ -228,6 +228,15 @@ pub fn random_in_unit_disk(rng: &mut SmallRng) -> Vec3 {
         }
     }
 }
+pub fn random_cosine_direction(rng: &mut SmallRng) -> Vec3 {
+    let r1 = rng.gen::<f64>();
+    let r2 = rng.gen::<f64>();
+    let z = (1.0 - r2).sqrt();
+    let phi = 2.0 * std::f64::consts::PI * r1;
+    let x = phi.cos() * r2.sqrt();
+    let y = phi.sin() * r2.sqrt();
+    Vec3::new(x, y, z)
+}
 pub fn reflect(v: Vec3, n: Vec3) -> Vec3 {
     v - n * 2.0 * (v * n)
 }
