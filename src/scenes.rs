@@ -512,10 +512,9 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Ar
             Cuboid::new(
                 Vec3::new(0.0, 0.0, 0.0),
                 Vec3::new(165.0, 330.0, 165.0),
-                Lambertian {
-                    albedo: SolidColor {
-                        color: Vec3::new(0.73, 0.73, 0.73),
-                    },
+                Metal {
+                    albedo: Vec3::new(0.8, 0.85, 0.88),
+                    fuzz: 0.0,
                 },
             ),
             15.0,
@@ -551,6 +550,20 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Ar
             },
         },
     }));
+    lights.add(Arc::new(Translate::new(
+        RotateY::new(
+            Cuboid::new(
+                Vec3::new(0.0, 0.0, 0.0),
+                Vec3::new(165.0, 330.0, 165.0),
+                Metal {
+                    albedo: Vec3::new(0.8, 0.85, 0.88),
+                    fuzz: 0.0,
+                },
+            ),
+            15.0,
+        ),
+        Vec3::new(265.0, 0.0, 295.0),
+    )));
     (
         Arc::new(world),
         Vec3::zero(),

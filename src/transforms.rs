@@ -35,7 +35,7 @@ impl<T: Object> Object for Translate<T> {
         self.object.pdf_value(origin - self.offset, v)
     }
     fn random(&self, origin: Vec3, rng: &mut SmallRng) -> Vec3 {
-        self.object.random(origin - self.offset, rng) + self.offset
+        self.object.random(origin - self.offset, rng)
     }
 }
 
