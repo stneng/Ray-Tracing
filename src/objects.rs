@@ -1,5 +1,4 @@
 use rand::{rngs::SmallRng, Rng};
-use std::sync::Arc;
 
 pub use crate::bvh::*;
 pub use crate::materials::*;
@@ -28,10 +27,10 @@ pub trait Object: Sync + Send {
     }
 }
 pub struct ObjectList {
-    pub objects: Vec<Arc<dyn Object>>,
+    pub objects: Vec<Box<dyn Object>>,
 }
 impl ObjectList {
-    pub fn add(&mut self, object: Arc<dyn Object>) {
+    pub fn add(&mut self, object: Box<dyn Object>) {
         self.objects.push(object);
     }
 }

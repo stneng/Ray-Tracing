@@ -4,10 +4,12 @@ use std::sync::Arc;
 pub use crate::camera::*;
 pub use crate::objects::*;
 
-pub fn random_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
+pub fn random_scene(
+    aspect_ratio: f64,
+) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Arc<Option<ObjectList>>) {
     let mut rng = SmallRng::from_entropy();
     let mut world = ObjectList { objects: vec![] };
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(0.0, -1000.0, 0.0),
         radius: 1000.0,
         material: Lambertian {
@@ -32,7 +34,7 @@ pub fn random_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             if (center - Vec3::new(4.0, 0.2, 0.0)).length() > 0.9 {
                 let rd = rng.gen::<f64>();
                 if rd < 0.8 {
-                    box1.add(Arc::new(MovingSphere {
+                    box1.add(Box::new(MovingSphere {
                         center1: center,
                         center2: center + Vec3::new(0.0, rng.gen_range(0.0, 0.5), 0.0),
                         t1: 0.0,
@@ -48,7 +50,7 @@ pub fn random_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
                         },
                     }));
                 } else if rd < 0.95 {
-                    box1.add(Arc::new(Sphere {
+                    box1.add(Box::new(Sphere {
                         center,
                         radius: 0.2,
                         material: Metal {
@@ -57,7 +59,7 @@ pub fn random_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
                         },
                     }));
                 } else {
-                    box1.add(Arc::new(Sphere {
+                    box1.add(Box::new(Sphere {
                         center,
                         radius: 0.2,
                         material: Dielectric { ref_idx: 1.5 },
@@ -66,9 +68,8 @@ pub fn random_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             }
         }
     }
-    let len = box1.objects.len();
-    world.add(Arc::new(BvhNode::new(&mut box1.objects, 0, len, 0.0, 1.0)));
-    world.add(Arc::new(Sphere {
+    world.add(BvhNode::build(&mut box1.objects, 0.0, 1.0));
+    world.add(Box::new(Sphere {
         center: Vec3::new(-4.0, 1.0, 0.0),
         radius: 1.0,
         material: Lambertian {
@@ -77,7 +78,7 @@ pub fn random_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             },
         },
     }));
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(4.0, 1.0, 0.0),
         radius: 1.0,
         material: Metal {
@@ -85,7 +86,7 @@ pub fn random_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             fuzz: 0.0,
         },
     }));
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(0.0, 1.0, 0.0),
         radius: 1.0,
         material: Dielectric { ref_idx: 1.5 },
@@ -104,12 +105,13 @@ pub fn random_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             0.0,
             1.0,
         )),
+        Arc::new(None),
     )
 }
 pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut rng = SmallRng::from_entropy();
     let mut world = ObjectList { objects: vec![] };
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(0.0, -1000.0, 0.0),
         radius: 1000.0,
         material: Lambertian {
@@ -159,7 +161,7 @@ pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
             if (center - Vec3::new(0.0, radius, 0.0)).length() > 1.3 {
                 let rd = rng.gen::<f64>();
                 if rd < 0.2 {
-                    box1.add(Arc::new(Sphere {
+                    box1.add(Box::new(Sphere {
                         center,
                         radius,
                         material: Lambertian {
@@ -169,7 +171,7 @@ pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
                         },
                     }));
                 } else if rd < 0.4 {
-                    box1.add(Arc::new(Sphere {
+                    box1.add(Box::new(Sphere {
                         center,
                         radius,
                         material: Metal {
@@ -178,7 +180,7 @@ pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
                         },
                     }));
                 } else if rd < 0.6 {
-                    box1.add(Arc::new(Sphere {
+                    box1.add(Box::new(Sphere {
                         center,
                         radius,
                         material: Dielectric {
@@ -186,7 +188,7 @@ pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
                         },
                     }));
                 } else if rd < 0.8 {
-                    box1.add(Arc::new(Sphere {
+                    box1.add(Box::new(Sphere {
                         center,
                         radius: radius * 0.9,
                         material: DiffuseLight {
@@ -195,13 +197,13 @@ pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
                             },
                         },
                     }));
-                    box1.add(Arc::new(Sphere {
+                    box1.add(Box::new(Sphere {
                         center,
                         radius,
                         material: Dielectric { ref_idx: 1.5 },
                     }));
                 } else {
-                    box1.add(Arc::new(Sphere {
+                    box1.add(Box::new(Sphere {
                         center,
                         radius: radius * 0.5,
                         material: DiffuseLight {
@@ -210,7 +212,7 @@ pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
                             },
                         },
                     }));
-                    box1.add(Arc::new(Sphere {
+                    box1.add(Box::new(Sphere {
                         center,
                         radius,
                         material: FrostedDielectric {
@@ -222,9 +224,8 @@ pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
             }
         }
     }
-    let len = box1.objects.len();
-    world.add(Arc::new(BvhNode::new(&mut box1.objects, 0, len, 0.0, 1.0)));
-    world.add(Arc::new(Sphere {
+    world.add(BvhNode::build(&mut box1.objects, 0.0, 1.0));
+    world.add(Box::new(Sphere {
         center: Vec3::new(0.0, 0.8, 0.0),
         radius: 0.8,
         material: DiffuseLight {
@@ -238,12 +239,12 @@ pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
             },
         },
     }));
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(1.3, 0.5, 0.0),
         radius: 0.5,
         material: Dielectric { ref_idx: 1.5 },
     }));
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(-1.3, 0.5, 0.0),
         radius: 0.5,
         material: Metal {
@@ -269,7 +270,7 @@ pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
 }
 pub fn two_checker_spheres(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut world = ObjectList { objects: vec![] };
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(0.0, -10.0, 0.0),
         radius: 10.0,
         material: Lambertian {
@@ -283,7 +284,7 @@ pub fn two_checker_spheres(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Cam
             },
         },
     }));
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(0.0, 10.0, 0.0),
         radius: 10.0,
         material: Lambertian {
@@ -315,7 +316,7 @@ pub fn two_checker_spheres(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Cam
 }
 pub fn two_perlin_spheres(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut world = ObjectList { objects: vec![] };
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(0.0, -1000.0, 0.0),
         radius: 1000.0,
         material: Lambertian {
@@ -325,7 +326,7 @@ pub fn two_perlin_spheres(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
             },
         },
     }));
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(0.0, 2.0, 0.0),
         radius: 2.0,
         material: Lambertian {
@@ -353,7 +354,7 @@ pub fn two_perlin_spheres(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
 }
 pub fn earth(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut world = ObjectList { objects: vec![] };
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(0.0, 0.0, 0.0),
         radius: 2.0,
         material: Lambertian {
@@ -378,7 +379,7 @@ pub fn earth(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
 }
 pub fn simple_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut world = ObjectList { objects: vec![] };
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(0.0, -1000.0, 0.0),
         radius: 1000.0,
         material: Lambertian {
@@ -388,7 +389,7 @@ pub fn simple_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             },
         },
     }));
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(0.0, 2.0, 0.0),
         radius: 2.0,
         material: Lambertian {
@@ -398,7 +399,7 @@ pub fn simple_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             },
         },
     }));
-    world.add(Arc::new(RectXY {
+    world.add(Box::new(RectXY {
         x1: 3.0,
         x2: 5.0,
         y1: 1.0,
@@ -427,9 +428,11 @@ pub fn simple_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
         )),
     )
 }
-pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Arc<ObjectList>) {
+pub fn cornell_box(
+    aspect_ratio: f64,
+) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Arc<Option<ObjectList>>) {
     let mut world = ObjectList { objects: vec![] };
-    world.add(Arc::new(RectYZ {
+    world.add(Box::new(RectYZ {
         y1: 0.0,
         y2: 555.0,
         z1: 0.0,
@@ -442,7 +445,7 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Ar
             },
         },
     }));
-    world.add(Arc::new(RectYZ {
+    world.add(Box::new(RectYZ {
         y1: 0.0,
         y2: 555.0,
         z1: 0.0,
@@ -455,7 +458,7 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Ar
             },
         },
     }));
-    world.add(Arc::new(RectXZ {
+    world.add(Box::new(RectXZ {
         x1: 213.0,
         x2: 343.0,
         z1: 227.0,
@@ -468,7 +471,7 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Ar
             },
         },
     }));
-    world.add(Arc::new(RectXZ {
+    world.add(Box::new(RectXZ {
         x1: 0.0,
         x2: 555.0,
         z1: 0.0,
@@ -481,7 +484,7 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Ar
             },
         },
     }));
-    world.add(Arc::new(RectXZ {
+    world.add(Box::new(RectXZ {
         x1: 0.0,
         x2: 555.0,
         z1: 0.0,
@@ -494,7 +497,7 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Ar
             },
         },
     }));
-    world.add(Arc::new(RectXY {
+    world.add(Box::new(RectXY {
         x1: 0.0,
         x2: 555.0,
         y1: 0.0,
@@ -507,7 +510,7 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Ar
             },
         },
     }));
-    world.add(Arc::new(Translate::new(
+    world.add(Box::new(Translate::new(
         RotateY::new(
             Cuboid::new(
                 Vec3::new(0.0, 0.0, 0.0),
@@ -521,7 +524,7 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Ar
         ),
         Vec3::new(265.0, 0.0, 295.0),
     )));
-    world.add(Arc::new(Translate::new(
+    world.add(Box::new(Translate::new(
         RotateY::new(
             Cuboid::new(
                 Vec3::new(0.0, 0.0, 0.0),
@@ -537,7 +540,7 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Ar
         Vec3::new(130.0, 0.0, 65.0),
     )));
     let mut lights = ObjectList { objects: vec![] };
-    lights.add(Arc::new(RectXZ {
+    lights.add(Box::new(RectXZ {
         x1: 213.0,
         x2: 343.0,
         z1: 227.0,
@@ -550,7 +553,7 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Ar
             },
         },
     }));
-    lights.add(Arc::new(Translate::new(
+    lights.add(Box::new(Translate::new(
         RotateY::new(
             Cuboid::new(
                 Vec3::new(0.0, 0.0, 0.0),
@@ -578,12 +581,12 @@ pub fn cornell_box(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Ar
             0.0,
             1.0,
         )),
-        Arc::new(lights),
+        Arc::new(Some(lights)),
     )
 }
 pub fn cornell_smoke(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut world = ObjectList { objects: vec![] };
-    world.add(Arc::new(RectYZ {
+    world.add(Box::new(RectYZ {
         y1: 0.0,
         y2: 555.0,
         z1: 0.0,
@@ -596,7 +599,7 @@ pub fn cornell_smoke(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) 
             },
         },
     }));
-    world.add(Arc::new(RectYZ {
+    world.add(Box::new(RectYZ {
         y1: 0.0,
         y2: 555.0,
         z1: 0.0,
@@ -609,7 +612,7 @@ pub fn cornell_smoke(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) 
             },
         },
     }));
-    world.add(Arc::new(RectXZ {
+    world.add(Box::new(RectXZ {
         x1: 113.0,
         x2: 443.0,
         z1: 127.0,
@@ -622,7 +625,7 @@ pub fn cornell_smoke(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) 
             },
         },
     }));
-    world.add(Arc::new(RectXZ {
+    world.add(Box::new(RectXZ {
         x1: 0.0,
         x2: 555.0,
         z1: 0.0,
@@ -635,7 +638,7 @@ pub fn cornell_smoke(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) 
             },
         },
     }));
-    world.add(Arc::new(RectXZ {
+    world.add(Box::new(RectXZ {
         x1: 0.0,
         x2: 555.0,
         z1: 0.0,
@@ -648,7 +651,7 @@ pub fn cornell_smoke(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) 
             },
         },
     }));
-    world.add(Arc::new(RectXY {
+    world.add(Box::new(RectXY {
         x1: 0.0,
         x2: 555.0,
         y1: 0.0,
@@ -661,7 +664,7 @@ pub fn cornell_smoke(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) 
             },
         },
     }));
-    world.add(Arc::new(ConstantMedium::new(
+    world.add(Box::new(ConstantMedium::new(
         Translate::new(
             RotateY::new(
                 Cuboid::new(
@@ -682,7 +685,7 @@ pub fn cornell_smoke(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) 
         },
         0.01,
     )));
-    world.add(Arc::new(ConstantMedium::new(
+    world.add(Box::new(ConstantMedium::new(
         Translate::new(
             RotateY::new(
                 Cuboid::new(
@@ -732,7 +735,7 @@ pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             let x2 = x1 + w;
             let y2 = rng.gen_range(1.0, 101.0);
             let z2 = z1 + w;
-            box1.add(Arc::new(Cuboid::new(
+            box1.add(Box::new(Cuboid::new(
                 Vec3::new(x1, y1, z1),
                 Vec3::new(x2, y2, z2),
                 Lambertian {
@@ -743,9 +746,8 @@ pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             )));
         }
     }
-    let len = box1.objects.len();
-    world.add(Arc::new(BvhNode::new(&mut box1.objects, 0, len, 0.0, 1.0)));
-    world.add(Arc::new(RectXZ {
+    world.add(BvhNode::build(&mut box1.objects, 0.0, 1.0));
+    world.add(Box::new(RectXZ {
         x1: 123.0,
         x2: 423.0,
         z1: 147.0,
@@ -758,7 +760,7 @@ pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             },
         },
     }));
-    world.add(Arc::new(MovingSphere {
+    world.add(Box::new(MovingSphere {
         center1: Vec3::new(400.0, 400.0, 200.0),
         center2: Vec3::new(400.0, 400.0, 200.0) + Vec3::new(30.0, 0.0, 0.0),
         t1: 0.0,
@@ -770,12 +772,12 @@ pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             },
         },
     }));
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(260.0, 150.0, 45.0),
         radius: 50.0,
         material: Dielectric { ref_idx: 1.5 },
     }));
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(0.0, 150.0, 145.0),
         radius: 50.0,
         material: Metal {
@@ -783,12 +785,12 @@ pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             fuzz: 1.0,
         },
     }));
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(360.0, 150.0, 145.0),
         radius: 70.0,
         material: Dielectric { ref_idx: 1.5 },
     }));
-    world.add(Arc::new(ConstantMedium::new(
+    world.add(Box::new(ConstantMedium::new(
         Sphere {
             center: Vec3::new(360.0, 150.0, 145.0),
             radius: 70.0,
@@ -799,7 +801,7 @@ pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
         },
         0.2,
     )));
-    world.add(Arc::new(ConstantMedium::new(
+    world.add(Box::new(ConstantMedium::new(
         Sphere {
             center: Vec3::new(0.0, 0.0, 0.0),
             radius: 5000.0,
@@ -810,14 +812,14 @@ pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
         },
         0.0001,
     )));
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(400.0, 200.0, 400.0),
         radius: 100.0,
         material: Lambertian {
             albedo: ImageTexture::new("images/earthmap.jpg"),
         },
     }));
-    world.add(Arc::new(Sphere {
+    world.add(Box::new(Sphere {
         center: Vec3::new(220.0, 280.0, 300.0),
         radius: 80.0,
         material: Lambertian {
@@ -829,7 +831,7 @@ pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     }));
     let mut box2 = ObjectList { objects: vec![] };
     for _ in 0..1000 {
-        box2.add(Arc::new(Sphere {
+        box2.add(Box::new(Sphere {
             center: Vec3::random(0.0, 165.0, &mut rng),
             radius: 10.0,
             material: Lambertian {
@@ -839,9 +841,8 @@ pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             },
         }))
     }
-    let len = box2.objects.len();
-    world.add(Arc::new(Translate::new(
-        RotateY::new(BvhNode::new(&mut box2.objects, 0, len, 0.0, 1.0), 15.0),
+    world.add(Box::new(Translate::new(
+        RotateY::new(Bvh::new(&mut box2.objects, 0.0, 1.0), 15.0),
         Vec3::new(-100.0, 270.0, 395.0),
     )));
     (

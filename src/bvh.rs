@@ -1,6 +1,5 @@
 use rand::Rng;
 use std::cmp::Ordering;
-use std::sync::Arc;
 
 pub use crate::objects::*;
 
@@ -59,45 +58,53 @@ impl Aabb {
     }
 }
 
+pub struct Bvh {
+    pub root: Box<dyn Object>,
+}
+impl Bvh {
+    pub fn new(objects: &mut Vec<Box<dyn Object>>, t1: f64, t2: f64) -> Self {
+        Self {
+            root: BvhNode::build(objects, t1, t2),
+        }
+    }
+}
+impl Object for Bvh {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        self.root.hit(ray, t_min, t_max)
+    }
+    fn bounding_box(&self, t1: f64, t2: f64) -> Option<Aabb> {
+        self.root.bounding_box(t1, t2)
+    }
+}
 pub struct BvhNode {
-    pub left: Arc<dyn Object>,
-    pub right: Arc<dyn Object>,
+    pub left: Box<dyn Object>,
+    pub right: Box<dyn Object>,
     pub boxx: Aabb,
 }
 impl BvhNode {
-    pub fn new(
-        objects: &mut Vec<Arc<dyn Object>>,
-        start: usize,
-        end: usize,
-        t1: f64,
-        t2: f64,
-    ) -> BvhNode {
+    pub fn build(objects: &mut Vec<Box<dyn Object>>, t1: f64, t2: f64) -> Box<dyn Object> {
         let left;
         let right;
         let boxx;
         let axis = rand::thread_rng().gen_range(0, 3);
         match axis {
-            0 => objects[start..end].sort_by(|a, b| box_x_compare(a, b)),
-            1 => objects[start..end].sort_by(|a, b| box_y_compare(a, b)),
-            2 => objects[start..end].sort_by(|a, b| box_z_compare(a, b)),
+            0 => objects.sort_by(|a, b| box_x_compare(&**a, &**b)),
+            1 => objects.sort_by(|a, b| box_y_compare(&**a, &**b)),
+            2 => objects.sort_by(|a, b| box_z_compare(&**a, &**b)),
             _ => panic!("axis error"),
         }
-        let len = end - start;
+        let len = objects.len();
         if len == 1 {
-            left = objects[start].clone();
-            right = objects[start].clone();
-        } else if len == 2 {
-            left = objects[start].clone();
-            right = objects[start + 1].clone();
+            return objects.remove(0);
         } else {
-            let mid = start + len / 2;
-            left = Arc::new(BvhNode::new(objects, start, mid, t1, t2));
-            right = Arc::new(BvhNode::new(objects, mid, end, t1, t2));
+            let mut objects2 = objects.split_off(objects.len() / 2);
+            left = BvhNode::build(objects, t1, t2);
+            right = BvhNode::build(&mut objects2, t1, t2);
         }
         if let Some(box_left) = left.bounding_box(t1, t2) {
             if let Some(box_right) = right.bounding_box(t1, t2) {
                 boxx = Aabb::surrounding_box(box_left, box_right);
-                return Self { left, right, boxx };
+                return Box::new(Self { left, right, boxx });
             }
         }
         panic!("No bounding box in BvhNode::new.");
@@ -125,7 +132,7 @@ impl Object for BvhNode {
     }
 }
 
-fn box_x_compare(a: &Arc<dyn Object>, b: &Arc<dyn Object>) -> Ordering {
+fn box_x_compare(a: &dyn Object, b: &dyn Object) -> Ordering {
     if let Some(box_left) = a.bounding_box(0.0, 0.0) {
         if let Some(box_right) = b.bounding_box(0.0, 0.0) {
             if let Some(cmp) = box_left.min.x.partial_cmp(&box_right.min.x) {
@@ -135,7 +142,7 @@ fn box_x_compare(a: &Arc<dyn Object>, b: &Arc<dyn Object>) -> Ordering {
     }
     panic!("No bounding box in BvhNode::new.");
 }
-fn box_y_compare(a: &Arc<dyn Object>, b: &Arc<dyn Object>) -> Ordering {
+fn box_y_compare(a: &dyn Object, b: &dyn Object) -> Ordering {
     if let Some(box_left) = a.bounding_box(0.0, 0.0) {
         if let Some(box_right) = b.bounding_box(0.0, 0.0) {
             if let Some(cmp) = box_left.min.y.partial_cmp(&box_right.min.y) {
@@ -145,7 +152,7 @@ fn box_y_compare(a: &Arc<dyn Object>, b: &Arc<dyn Object>) -> Ordering {
     }
     panic!("No bounding box in BvhNode::new.");
 }
-fn box_z_compare(a: &Arc<dyn Object>, b: &Arc<dyn Object>) -> Ordering {
+fn box_z_compare(a: &dyn Object, b: &dyn Object) -> Ordering {
     if let Some(box_left) = a.bounding_box(0.0, 0.0) {
         if let Some(box_right) = b.bounding_box(0.0, 0.0) {
             if let Some(cmp) = box_left.min.z.partial_cmp(&box_right.min.z) {
