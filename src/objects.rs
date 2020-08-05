@@ -123,6 +123,24 @@ impl<T: Material> Object for Sphere<T> {
             max: self.center + Vec3::new(self.radius, self.radius, self.radius),
         })
     }
+    fn pdf_value(&self, origin: Vec3, v: Vec3) -> f64 {
+        match self.hit(&Ray::new(origin, v, 0.0), 0.001, f64::MAX) {
+            Some(_rec) => {
+                let cos_theta_max = (1.0
+                    - self.radius * self.radius / (self.center - origin).squared_length())
+                .sqrt();
+                let solid_angle = 2.0 * std::f64::consts::PI * (1.0 - cos_theta_max);
+                1.0 / solid_angle
+            }
+            None => 0.0,
+        }
+    }
+    fn random(&self, origin: Vec3, rng: &mut SmallRng) -> Vec3 {
+        let direction = self.center - origin;
+        let distance_squared = direction.squared_length();
+        let uvw = ONB::build_from_w(direction);
+        uvw.local(random_to_sphere(self.radius, distance_squared, rng))
+    }
 }
 
 pub struct MovingSphere<T: Material> {

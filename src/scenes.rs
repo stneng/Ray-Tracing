@@ -515,9 +515,10 @@ pub fn cornell_box(
             Cuboid::new(
                 Vec3::new(0.0, 0.0, 0.0),
                 Vec3::new(165.0, 330.0, 165.0),
-                Metal {
-                    albedo: Vec3::new(0.8, 0.85, 0.88),
-                    fuzz: 0.0,
+                Lambertian {
+                    albedo: SolidColor {
+                        color: Vec3::new(0.73, 0.73, 0.73),
+                    },
                 },
             ),
             15.0,
@@ -525,19 +526,12 @@ pub fn cornell_box(
         Vec3::new(265.0, 0.0, 295.0),
     )));
     world.add(Box::new(Translate::new(
-        RotateY::new(
-            Cuboid::new(
-                Vec3::new(0.0, 0.0, 0.0),
-                Vec3::new(165.0, 165.0, 165.0),
-                Lambertian {
-                    albedo: SolidColor {
-                        color: Vec3::new(0.73, 0.73, 0.73),
-                    },
-                },
-            ),
-            -18.0,
-        ),
-        Vec3::new(130.0, 0.0, 65.0),
+        Sphere {
+            center: Vec3::new(0.0, 90.0, 0.0),
+            radius: 90.0,
+            material: Dielectric { ref_idx: 1.5 },
+        },
+        Vec3::new(190.0, 0.0, 190.0),
     )));
     let mut lights = ObjectList { objects: vec![] };
     lights.add(Box::new(RectXZ {
@@ -554,18 +548,12 @@ pub fn cornell_box(
         },
     }));
     lights.add(Box::new(Translate::new(
-        RotateY::new(
-            Cuboid::new(
-                Vec3::new(0.0, 0.0, 0.0),
-                Vec3::new(165.0, 330.0, 165.0),
-                Metal {
-                    albedo: Vec3::new(0.8, 0.85, 0.88),
-                    fuzz: 0.0,
-                },
-            ),
-            15.0,
-        ),
-        Vec3::new(265.0, 0.0, 295.0),
+        Sphere {
+            center: Vec3::new(0.0, 90.0, 0.0),
+            radius: 90.0,
+            material: Dielectric { ref_idx: 1.5 },
+        },
+        Vec3::new(190.0, 0.0, 190.0),
     )));
     (
         Arc::new(world),

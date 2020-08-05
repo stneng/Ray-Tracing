@@ -70,12 +70,12 @@ pub fn run_ray_tracing() {
         Err(_) => false,
     };
     let (image_width, image_height, samples_per_pixel, thread_num) = if is_ci {
-        (1600, 900, 1024, 2)
+        (1600, 1600, 1024, 2)
     } else {
-        (400, 225, 64, 16)
+        (600, 600, 64, 16)
     };
 
-    let (world, background, cam, lights) = random_scene(image_width as f64 / image_height as f64);
+    let (world, background, cam, lights) = cornell_box(image_width as f64 / image_height as f64);
 
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
     let pbar = ProgressBar::new(image_width as u64);
@@ -99,10 +99,15 @@ pub fn run_ray_tracing() {
                     for _ in 0..samples_per_pixel {
                         let u = (x as f64 + rng.gen::<f64>()) / (image_width as f64 - 1.0);
                         let v = (y as f64 + rng.gen::<f64>()) / (image_height as f64 - 1.0);
-                        let ray = cam.get_ray(u, v, &mut rng);
-                        color += ray_color::<ObjectList>(
-                            &ray, &world, background, &lights, 50, &mut rng,
-                        );
+                        color += loop {
+                            let ray = cam.get_ray(u, v, &mut rng);
+                            let rec = ray_color::<ObjectList>(
+                                &ray, &world, background, &lights, 50, &mut rng,
+                            );
+                            if !(rec.x.is_nan() || rec.y.is_nan() || rec.z.is_nan()) {
+                                break rec;
+                            }
+                        };
                     }
                     color /= samples_per_pixel as f64;
                     ans.color.push([
