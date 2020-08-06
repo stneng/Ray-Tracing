@@ -168,7 +168,9 @@ pub fn random_scene_static(
         Arc::new(None),
     )
 }
-pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
+pub fn random_scene_light(
+    aspect_ratio: f64,
+) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Arc<Option<ObjectList>>) {
     let mut rng = SmallRng::from_entropy();
     let mut world = ObjectList { objects: vec![] };
     world.add(Box::new(Sphere {
@@ -326,6 +328,7 @@ pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Came
             0.0,
             1.0,
         )),
+        Arc::new(None),
     )
 }
 pub fn two_checker_spheres(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {

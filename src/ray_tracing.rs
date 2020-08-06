@@ -76,7 +76,7 @@ pub fn run_ray_tracing() {
     };
 
     let (world, background, cam, lights) =
-        random_scene_static(image_width as f64 / image_height as f64);
+        random_scene_light(image_width as f64 / image_height as f64);
 
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
     let pbar = ProgressBar::new(image_width as u64);
