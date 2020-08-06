@@ -331,6 +331,71 @@ pub fn random_scene_light(
         Arc::new(None),
     )
 }
+use ray_tracing_codegen::random_scene_light_static_impl;
+random_scene_light_static_impl! {}
+pub fn random_scene_light_static(
+    aspect_ratio: f64,
+) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Arc<Option<ObjectList>>) {
+    let mut world = ObjectList { objects: vec![] };
+    world.add(Box::new(Sphere {
+        center: Vec3::new(0.0, -1000.0, 0.0),
+        radius: 1000.0,
+        material: Lambertian {
+            albedo: CheckerTexture {
+                odd: SolidColor {
+                    color: Vec3::new(0.2, 0.3, 0.1),
+                },
+                even: SolidColor {
+                    color: Vec3::new(0.9, 0.9, 0.9),
+                },
+            },
+        },
+    }));
+    world.add(random_scene_light_static_bvh());
+    world.add(Box::new(Sphere {
+        center: Vec3::new(0.0, 0.8, 0.0),
+        radius: 0.8,
+        material: DiffuseLight {
+            emit: CheckerTexture {
+                odd: SolidColor {
+                    color: Vec3::new(1.0, 0.6, 0.4),
+                },
+                even: SolidColor {
+                    color: Vec3::new(1.0, 0.75, 0.3),
+                },
+            },
+        },
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3::new(1.3, 0.5, 0.0),
+        radius: 0.5,
+        material: Dielectric { ref_idx: 1.5 },
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3::new(-1.3, 0.5, 0.0),
+        radius: 0.5,
+        material: Metal {
+            albedo: Vec3::new(0.8, 0.6, 0.3),
+            fuzz: 0.0,
+        },
+    }));
+    (
+        Arc::new(world),
+        Vec3::zero(),
+        Arc::new(Camera::new(
+            Vec3::new(6.0, 3.0, 6.0),
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(0.0, 1.0, 0.0),
+            40.0,
+            aspect_ratio,
+            0.05,
+            9.0,
+            0.0,
+            1.0,
+        )),
+        Arc::new(None),
+    )
+}
 pub fn two_checker_spheres(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut world = ObjectList { objects: vec![] };
     world.add(Box::new(Sphere {
