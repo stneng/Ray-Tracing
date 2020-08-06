@@ -108,6 +108,66 @@ pub fn random_scene(
         Arc::new(None),
     )
 }
+use ray_tracing_codegen::random_scene_static_impl;
+random_scene_static_impl! {}
+pub fn random_scene_static(
+    aspect_ratio: f64,
+) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Arc<Option<ObjectList>>) {
+    let mut world = ObjectList { objects: vec![] };
+    world.add(Box::new(Sphere {
+        center: Vec3::new(0.0, -1000.0, 0.0),
+        radius: 1000.0,
+        material: Lambertian {
+            albedo: CheckerTexture {
+                odd: SolidColor {
+                    color: Vec3::new(0.2, 0.3, 0.1),
+                },
+                even: SolidColor {
+                    color: Vec3::new(0.9, 0.9, 0.9),
+                },
+            },
+        },
+    }));
+    world.add(random_scene_static_bvh());
+    world.add(Box::new(Sphere {
+        center: Vec3::new(-4.0, 1.0, 0.0),
+        radius: 1.0,
+        material: Lambertian {
+            albedo: SolidColor {
+                color: Vec3::new(0.4, 0.2, 0.1),
+            },
+        },
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3::new(4.0, 1.0, 0.0),
+        radius: 1.0,
+        material: Metal {
+            albedo: Vec3::new(0.7, 0.6, 0.5),
+            fuzz: 0.0,
+        },
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3::new(0.0, 1.0, 0.0),
+        radius: 1.0,
+        material: Dielectric { ref_idx: 1.5 },
+    }));
+    (
+        Arc::new(world),
+        Vec3::new(0.7, 0.8, 1.0),
+        Arc::new(Camera::new(
+            Vec3::new(13.0, 2.0, 3.0),
+            Vec3::new(0.0, 0.0, 0.0),
+            Vec3::new(0.0, 1.0, 0.0),
+            20.0,
+            aspect_ratio,
+            0.1,
+            10.0,
+            0.0,
+            1.0,
+        )),
+        Arc::new(None),
+    )
+}
 pub fn random_scene_light(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
     let mut rng = SmallRng::from_entropy();
     let mut world = ObjectList { objects: vec![] };

@@ -107,10 +107,48 @@ impl BvhNode {
                 return Box::new(Self { left, right, boxx });
             }
         }
-        panic!("No bounding box in BvhNode::new.");
+        panic!("No bounding box in BvhNode::build.");
     }
 }
 impl Object for BvhNode {
+    fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
+        if !self.boxx.hit(ray, t_min, t_max) {
+            return None;
+        }
+        if let Some(tmp) = self.left.hit(ray, t_min, t_max) {
+            if let Some(tmp) = self.right.hit(ray, t_min, tmp.t) {
+                return Some(tmp);
+            } else {
+                return Some(tmp);
+            }
+        }
+        if let Some(tmp) = self.right.hit(ray, t_min, t_max) {
+            return Some(tmp);
+        }
+        None
+    }
+    fn bounding_box(&self, _t1: f64, _t2: f64) -> Option<Aabb> {
+        Some(self.boxx.clone())
+    }
+}
+
+pub struct BvhNodeStatic<T1: Object, T2: Object> {
+    pub left: Box<T1>,
+    pub right: Box<T2>,
+    pub boxx: Aabb,
+}
+impl<T1: Object, T2: Object> BvhNodeStatic<T1, T2> {
+    pub fn new(left: Box<T1>, right: Box<T2>, t1: f64, t2: f64) -> Self {
+        if let Some(box_left) = left.bounding_box(t1, t2) {
+            if let Some(box_right) = right.bounding_box(t1, t2) {
+                let boxx = Aabb::surrounding_box(box_left, box_right);
+                return Self { left, right, boxx };
+            }
+        }
+        panic!("No bounding box in BvhNodeStatic::new.");
+    }
+}
+impl<T1: Object, T2: Object> Object for BvhNodeStatic<T1, T2> {
     fn hit(&self, ray: &Ray, t_min: f64, t_max: f64) -> Option<HitRecord> {
         if !self.boxx.hit(ray, t_min, t_max) {
             return None;
@@ -140,7 +178,7 @@ fn box_x_compare(a: &dyn Object, b: &dyn Object) -> Ordering {
             }
         }
     }
-    panic!("No bounding box in BvhNode::new.");
+    panic!("No bounding box in BvhNode::build.");
 }
 fn box_y_compare(a: &dyn Object, b: &dyn Object) -> Ordering {
     if let Some(box_left) = a.bounding_box(0.0, 0.0) {
@@ -150,7 +188,7 @@ fn box_y_compare(a: &dyn Object, b: &dyn Object) -> Ordering {
             }
         }
     }
-    panic!("No bounding box in BvhNode::new.");
+    panic!("No bounding box in BvhNode::build.");
 }
 fn box_z_compare(a: &dyn Object, b: &dyn Object) -> Ordering {
     if let Some(box_left) = a.bounding_box(0.0, 0.0) {
@@ -160,5 +198,5 @@ fn box_z_compare(a: &dyn Object, b: &dyn Object) -> Ordering {
             }
         }
     }
-    panic!("No bounding box in BvhNode::new.");
+    panic!("No bounding box in BvhNode::build.");
 }
