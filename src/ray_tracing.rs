@@ -70,13 +70,13 @@ pub fn run_ray_tracing() {
         Err(_) => false,
     };
     let (image_width, image_height, samples_per_pixel, thread_num) = if is_ci {
-        (1600, 900, 256, 2)
+        (1600, 1600, 256, 2)
     } else {
-        (400, 225, 64, 16)
+        (400, 400, 64, 16)
     };
 
     let (world, background, cam, lights) =
-        random_scene_light_static(image_width as f64 / image_height as f64);
+        scene_from_file(image_width as f64 / image_height as f64);
 
     let mut img: RgbImage = ImageBuffer::new(image_width, image_height);
     let pbar = ProgressBar::new(image_width as u64);

@@ -172,12 +172,12 @@ pub fn random_scene_light_static(_item: proc_macro::TokenStream) -> proc_macro::
                                     },
                                 },
                             })
-                        }
+                        },
                     });
                 } else if rd < 0.4 {
-                    objects.push(Object{
+                    objects.push(Object {
                         bounding_box_min,
-                        code:quote! {
+                        code: quote! {
                             Box::new(Sphere {
                                 center: Vec3::new(#x, #y, #z),
                                 radius: #radius,
@@ -186,12 +186,12 @@ pub fn random_scene_light_static(_item: proc_macro::TokenStream) -> proc_macro::
                                     fuzz: rng.gen_range(0.0, 0.5),
                                 },
                             })
-                        }
+                        },
                     });
                 } else if rd < 0.6 {
-                    objects.push(Object{
+                    objects.push(Object {
                         bounding_box_min,
-                        code:quote! {
+                        code: quote! {
                             Box::new(Sphere {
                                 center: Vec3::new(#x, #y, #z),
                                 radius: #radius,
@@ -199,12 +199,12 @@ pub fn random_scene_light_static(_item: proc_macro::TokenStream) -> proc_macro::
                                     ref_idx: rng.gen_range(1.5, 2.0),
                                 },
                             })
-                        }
+                        },
                     });
                 } else if rd < 0.8 {
-                    objects.push(Object{
+                    objects.push(Object {
                         bounding_box_min,
-                        code:quote! {
+                        code: quote! {
                             Box::new(Sphere {
                                 center: Vec3::new(#x, #y, #z),
                                 radius: #radius * 0.9,
@@ -214,22 +214,22 @@ pub fn random_scene_light_static(_item: proc_macro::TokenStream) -> proc_macro::
                                     },
                                 },
                             })
-                        }
+                        },
                     });
-                    objects.push(Object{
+                    objects.push(Object {
                         bounding_box_min,
-                        code:quote! {
+                        code: quote! {
                             Box::new(Sphere {
                                 center: Vec3::new(#x, #y, #z),
                                 radius: #radius,
                                 material: Dielectric { ref_idx: 1.5 },
                             })
-                        }
+                        },
                     });
                 } else {
-                    objects.push(Object{
+                    objects.push(Object {
                         bounding_box_min,
-                        code:quote! {
+                        code: quote! {
                             Box::new(Sphere {
                                 center: Vec3::new(#x, #y, #z),
                                 radius: #radius * 0.5,
@@ -239,11 +239,11 @@ pub fn random_scene_light_static(_item: proc_macro::TokenStream) -> proc_macro::
                                     },
                                 },
                             })
-                        }
+                        },
                     });
-                    objects.push(Object{
+                    objects.push(Object {
                         bounding_box_min,
-                        code:quote! {
+                        code: quote! {
                             Box::new(Sphere {
                                 center: Vec3::new(#x, #y, #z),
                                 radius: #radius,
@@ -252,7 +252,7 @@ pub fn random_scene_light_static(_item: proc_macro::TokenStream) -> proc_macro::
                                     fuzz: rng.gen_range(0.3, 0.5),
                                 },
                             })
-                        }
+                        },
                     });
                 }
             }

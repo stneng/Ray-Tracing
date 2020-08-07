@@ -977,3 +977,5 @@ pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
         )),
     )
 }
+use ray_tracing_codegen::scene_from_file_impl;
+scene_from_file_impl! {}

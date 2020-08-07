@@ -104,6 +104,11 @@ pub struct Perlin {
     pub perm_z: Vec<i32>,
     pub ranvec: Vec<Vec3>,
 }
+impl Default for Perlin {
+    fn default() -> Self {
+        Self::new()
+    }
+}
 impl Perlin {
     pub fn new() -> Self {
         Self {
