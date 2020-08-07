@@ -47,7 +47,14 @@ fn bvh_build(objects: &mut Vec<Object>) -> TokenStream {
         }
     }
 }
-pub fn random_scene_static(_item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn random_scene_static(switch: bool) -> proc_macro::TokenStream {
+    if !switch {
+        return proc_macro::TokenStream::from(quote! {
+            fn random_scene_static_bvh() -> Box<dyn Object> {
+                Box::new(ObjectList { objects: vec![] })
+            }
+        });
+    }
     let mut rng = SmallRng::from_entropy();
     let mut objects = vec![];
     for a in -11..11 {
@@ -120,7 +127,14 @@ pub fn random_scene_static(_item: proc_macro::TokenStream) -> proc_macro::TokenS
         }
     })
 }
-pub fn random_scene_light_static(_item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn random_scene_light_static(switch: bool) -> proc_macro::TokenStream {
+    if !switch {
+        return proc_macro::TokenStream::from(quote! {
+            fn random_scene_light_static_bvh() -> Box<dyn Object> {
+                Box::new(ObjectList { objects: vec![] })
+            }
+        });
+    }
     let mut rng = SmallRng::from_entropy();
     let mut objects = vec![];
     let mut box1_sphere = vec![

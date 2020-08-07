@@ -14,7 +14,7 @@ fn get_vec3(vec3: &Value) -> TokenStream {
             }
         }
     }
-    panic!("Vec3 error");
+    quote! { compile_error! { "Vec3 error" } }
 }
 fn build_object(object: &Value) -> TokenStream {
     match object["type"].as_str() {
@@ -32,7 +32,7 @@ fn build_object(object: &Value) -> TokenStream {
                     ObjectList { objects: vec![#token] }
                 }
             } else {
-                panic!("ObjectList no items");
+                quote! { compile_error! { "ObjectList no items" } }
             }
         }
         Some("Sphere") => {
@@ -47,7 +47,7 @@ fn build_object(object: &Value) -> TokenStream {
                     }
                 };
             }
-            panic!("Sphere error");
+            quote! { compile_error! { "Sphere error" } }
         }
         Some("BVHNode") => {
             let left = build_object(&object["left"]);
@@ -57,7 +57,7 @@ fn build_object(object: &Value) -> TokenStream {
             }
         }
         _ => {
-            panic!("Object type error");
+            quote! { compile_error! { "Object type error" } }
         }
     }
 }
@@ -79,7 +79,7 @@ fn build_material(material: &Value) -> TokenStream {
                     }
                 };
             }
-            panic!("Metal error");
+            quote! { compile_error! { "Metal error" } }
         }
         Some("Dielectric") => {
             if let Some(ref_idx) = material["ref_idx"].as_f64() {
@@ -87,7 +87,7 @@ fn build_material(material: &Value) -> TokenStream {
                     Dielectric { ref_idx: #ref_idx }
                 };
             }
-            panic!("Dielectric error");
+            quote! { compile_error! { "Dielectric error" } }
         }
         Some("DiffuseLight") => {
             let emit = build_texture(&material["emit"]);
@@ -96,7 +96,7 @@ fn build_material(material: &Value) -> TokenStream {
             }
         }
         _ => {
-            panic!("Material type error");
+            quote! { compile_error! { "Material type error" } }
         }
     }
 }
@@ -119,7 +119,7 @@ fn build_texture(texture: &Value) -> TokenStream {
             }
         }
         _ => {
-            panic!("Texture type error");
+            quote! { compile_error! { "Texture type error" } }
         }
     }
 }
@@ -148,16 +148,21 @@ fn get_camera(cam: &Value) -> TokenStream {
             }
         }
     }
-    panic!("Camera error");
+    quote! { compile_error! { "Camera error" } }
 }
 fn from_file() -> (TokenStream, TokenStream) {
-    let file = File::open("codegen/data/scene_500.json").unwrap();
+    let file = File::open("codegen/data/scene_10.json").unwrap();
     let reader = BufReader::new(file);
     let data: Value = serde_json::from_reader(reader).unwrap();
     (build_object(&data["objects"]), get_camera(&data["camera"]))
 }
 
-pub fn scene_from_file(_item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+pub fn scene_from_file(switch: bool) -> proc_macro::TokenStream {
+    if !switch {
+        return proc_macro::TokenStream::from(
+            quote! { pub fn scene_from_file(_aspect_ratio: f64){} },
+        );
+    }
     let (world, cam) = from_file();
     proc_macro::TokenStream::from(quote! {
         pub fn scene_from_file(_aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Arc<Option<ObjectList>>) {

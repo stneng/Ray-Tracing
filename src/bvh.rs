@@ -138,6 +138,7 @@ pub struct BvhNodeStatic<T1: Object, T2: Object> {
     pub boxx: Aabb,
 }
 impl<T1: Object, T2: Object> BvhNodeStatic<T1, T2> {
+    #[allow(dead_code)]
     pub fn new(left: Box<T1>, right: Box<T2>, t1: f64, t2: f64) -> Self {
         if let Some(box_left) = left.bounding_box(t1, t2) {
             if let Some(box_right) = right.bounding_box(t1, t2) {
