@@ -151,7 +151,7 @@ fn get_camera(cam: &Value) -> TokenStream {
     quote! { compile_error! { "Camera error" } }
 }
 fn from_file() -> (TokenStream, TokenStream) {
-    let file = File::open("codegen/data/scene_200_no_bvh.json").unwrap();
+    let file = File::open("codegen/data/scene_500.json").unwrap();
     let reader = BufReader::new(file);
     let data: Value = serde_json::from_reader(reader).unwrap();
     (build_object(&data["objects"]), get_camera(&data["camera"]))

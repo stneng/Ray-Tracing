@@ -838,7 +838,9 @@ pub fn cornell_smoke(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) 
         )),
     )
 }
-pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
+pub fn final_scene(
+    aspect_ratio: f64,
+) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Arc<Option<ObjectList>>) {
     let mut rng = SmallRng::from_entropy();
     let mut world = ObjectList { objects: vec![] };
     let mut box1 = ObjectList { objects: vec![] };
@@ -961,6 +963,38 @@ pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
         RotateY::new(Bvh::new(&mut box2.objects, 0.0, 1.0), 15.0),
         Vec3::new(-100.0, 270.0, 395.0),
     )));
+    let mut lights = ObjectList { objects: vec![] };
+    lights.add(Box::new(RectXZ {
+        x1: 123.0,
+        x2: 423.0,
+        z1: 147.0,
+        z2: 412.0,
+        k: 554.0,
+        face: -1.0,
+        material: DiffuseLight {
+            emit: SolidColor {
+                color: Vec3::new(7.0, 7.0, 7.0),
+            },
+        },
+    }));
+    lights.add(Box::new(Sphere {
+        center: Vec3::new(260.0, 150.0, 45.0),
+        radius: 50.0,
+        material: Dielectric { ref_idx: 1.5 },
+    }));
+    lights.add(Box::new(Sphere {
+        center: Vec3::new(0.0, 150.0, 145.0),
+        radius: 50.0,
+        material: Metal {
+            albedo: Vec3::new(0.8, 0.8, 0.9),
+            fuzz: 1.0,
+        },
+    }));
+    lights.add(Box::new(Sphere {
+        center: Vec3::new(360.0, 150.0, 145.0),
+        radius: 70.0,
+        material: Dielectric { ref_idx: 1.5 },
+    }));
     (
         Arc::new(world),
         Vec3::zero(),
@@ -975,6 +1009,147 @@ pub fn final_scene(aspect_ratio: f64) -> (Arc<ObjectList>, Vec3, Arc<Camera>) {
             0.0,
             1.0,
         )),
+        Arc::new(Some(lights)),
+    )
+}
+use ray_tracing_codegen::final_scene_static_impl;
+final_scene_static_impl! {}
+pub fn final_scene_static(
+    aspect_ratio: f64,
+) -> (Arc<ObjectList>, Vec3, Arc<Camera>, Arc<Option<ObjectList>>) {
+    let mut world = ObjectList { objects: vec![] };
+    let (box1, box2) = final_scene_static_bvh();
+    world.add(box1);
+    world.add(box2);
+    world.add(Box::new(RectXZ {
+        x1: 123.0,
+        x2: 423.0,
+        z1: 147.0,
+        z2: 412.0,
+        k: 554.0,
+        face: -1.0,
+        material: DiffuseLight {
+            emit: SolidColor {
+                color: Vec3::new(7.0, 7.0, 7.0),
+            },
+        },
+    }));
+    world.add(Box::new(MovingSphere {
+        center1: Vec3::new(400.0, 400.0, 200.0),
+        center2: Vec3::new(400.0, 400.0, 200.0) + Vec3::new(30.0, 0.0, 0.0),
+        t1: 0.0,
+        t2: 1.0,
+        radius: 50.0,
+        material: Lambertian {
+            albedo: SolidColor {
+                color: Vec3::new(0.7, 0.3, 0.1),
+            },
+        },
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3::new(260.0, 150.0, 45.0),
+        radius: 50.0,
+        material: Dielectric { ref_idx: 1.5 },
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3::new(0.0, 150.0, 145.0),
+        radius: 50.0,
+        material: Metal {
+            albedo: Vec3::new(0.8, 0.8, 0.9),
+            fuzz: 1.0,
+        },
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3::new(360.0, 150.0, 145.0),
+        radius: 70.0,
+        material: Dielectric { ref_idx: 1.5 },
+    }));
+    world.add(Box::new(ConstantMedium::new(
+        Sphere {
+            center: Vec3::new(360.0, 150.0, 145.0),
+            radius: 70.0,
+            material: Dielectric { ref_idx: 1.5 },
+        },
+        SolidColor {
+            color: Vec3::new(0.2, 0.4, 0.9),
+        },
+        0.2,
+    )));
+    world.add(Box::new(ConstantMedium::new(
+        Sphere {
+            center: Vec3::new(0.0, 0.0, 0.0),
+            radius: 5000.0,
+            material: Dielectric { ref_idx: 1.5 },
+        },
+        SolidColor {
+            color: Vec3::ones(),
+        },
+        0.0001,
+    )));
+    world.add(Box::new(Sphere {
+        center: Vec3::new(400.0, 200.0, 400.0),
+        radius: 100.0,
+        material: Lambertian {
+            albedo: ImageTexture::new("images/earthmap.jpg"),
+        },
+    }));
+    world.add(Box::new(Sphere {
+        center: Vec3::new(220.0, 280.0, 300.0),
+        radius: 80.0,
+        material: Lambertian {
+            albedo: NoiseTexture {
+                noise: Perlin::new(),
+                scale: 0.1,
+            },
+        },
+    }));
+    let mut lights = ObjectList { objects: vec![] };
+    lights.add(Box::new(RectXZ {
+        x1: 123.0,
+        x2: 423.0,
+        z1: 147.0,
+        z2: 412.0,
+        k: 554.0,
+        face: -1.0,
+        material: DiffuseLight {
+            emit: SolidColor {
+                color: Vec3::new(7.0, 7.0, 7.0),
+            },
+        },
+    }));
+    lights.add(Box::new(Sphere {
+        center: Vec3::new(260.0, 150.0, 45.0),
+        radius: 50.0,
+        material: Dielectric { ref_idx: 1.5 },
+    }));
+    lights.add(Box::new(Sphere {
+        center: Vec3::new(0.0, 150.0, 145.0),
+        radius: 50.0,
+        material: Metal {
+            albedo: Vec3::new(0.8, 0.8, 0.9),
+            fuzz: 1.0,
+        },
+    }));
+    lights.add(Box::new(Sphere {
+        center: Vec3::new(360.0, 150.0, 145.0),
+        radius: 70.0,
+        material: Dielectric { ref_idx: 1.5 },
+    }));
+    (
+        Arc::new(world),
+        Vec3::zero(),
+        Arc::new(Camera::new(
+            Vec3::new(478.0, 278.0, -600.0),
+            Vec3::new(278.0, 278.0, 0.0),
+            Vec3::new(0.0, 1.0, 0.0),
+            40.0,
+            aspect_ratio,
+            0.0,
+            28.3,
+            0.0,
+            1.0,
+        )),
+        Arc::new(Some(lights)),
     )
 }
 use ray_tracing_codegen::scene_from_file_impl;

@@ -280,3 +280,75 @@ pub fn random_scene_light_static(switch: bool) -> proc_macro::TokenStream {
         }
     })
 }
+pub fn final_scene_static(switch: bool) -> proc_macro::TokenStream {
+    if !switch {
+        return proc_macro::TokenStream::from(quote! {
+            fn final_scene_static_bvh() -> (Box<dyn Object>, Box<dyn Object>) {
+                (Box::new(ObjectList { objects: vec![] }), Box::new(ObjectList { objects: vec![] }))
+            }
+        });
+    }
+    let mut rng = SmallRng::from_entropy();
+    let mut objects1 = vec![];
+    for i in 0..20 {
+        for j in 0..20 {
+            let w = 100.0;
+            let x1 = -1000.0 + i as f64 * w;
+            let y1 = 0.0;
+            let z1 = -1000.0 + j as f64 * w;
+            let x2 = x1 + w;
+            let y2 = rng.gen_range(1.0, 101.0);
+            let z2 = z1 + w;
+            let bounding_box_min = Vec3::new(x1, y1, z1);
+            objects1.push(Object {
+                bounding_box_min,
+                code: quote! {
+                    Box::new(Cuboid::new(
+                        Vec3::new(#x1, #y1, #z1),
+                        Vec3::new(#x2, #y2, #z2),
+                        Lambertian {
+                            albedo: SolidColor {
+                                color: Vec3::new(0.48, 0.83, 0.53),
+                            },
+                        },
+                    ))
+                },
+            });
+        }
+    }
+    let bvh_code1 = bvh_build(&mut objects1);
+    let mut objects2 = vec![];
+    for _ in 0..1000 {
+        let center = Vec3::random(0.0, 165.0, &mut rng);
+        let radius = 10.0;
+        let bounding_box_min = center - Vec3::new(radius, radius, radius);
+        let (x, y, z) = (center.x, center.y, center.z);
+        objects2.push(Object {
+            bounding_box_min,
+            code: quote! {
+                Box::new(Sphere {
+                    center: Vec3::new(#x, #y, #z),
+                    radius: #radius,
+                    material: Lambertian {
+                        albedo: SolidColor {
+                            color: Vec3::new(0.73, 0.73, 0.73),
+                        },
+                    },
+                })
+            },
+        });
+    }
+    let bvh_code2 = bvh_build(&mut objects2);
+    proc_macro::TokenStream::from(quote! {
+        fn final_scene_static_bvh() -> (Box<dyn Object>, Box<dyn Object>) {
+            let mut rng = SmallRng::from_entropy();
+            (
+                #bvh_code1,
+                Box::new(Translate::new(
+                    RotateY::new(*#bvh_code2, 15.0),
+                    Vec3::new(-100.0, 270.0, 395.0),
+                ))
+            )
+        }
+    })
+}
