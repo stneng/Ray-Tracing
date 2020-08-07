@@ -8,7 +8,7 @@ pub use crate::camera::*;
 pub use crate::objects::*;
 pub use crate::scenes::*;
 
-fn ray_color<T: Object>(
+pub fn ray_color<T: Object>(
     ray: &Ray,
     world: &ObjectList,
     background: Vec3,

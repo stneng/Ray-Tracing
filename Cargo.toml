@@ -11,3 +11,10 @@ num = "0.3"
 rand = { version = "0.7", features = ["small_rng"] }
 threadpool = "1.8"
 ray-tracing-codegen = { path = "codegen" }
+
+[dev-dependencies]
+criterion = "0.3"
+
+[[bench]]
+name = "ray_tracing_benchmark"
+harness = false
